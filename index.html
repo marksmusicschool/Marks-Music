@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Marks Music">
+<meta name="theme-color" content="#f6f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Marks Music Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Familjen+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column, like a teacher's logbook page. Six string hairlines are the only ornament. */
+:root{
+  --bg:#f6f5f2; --surface:#ffffff; --ink:#17171a; --muted:#6c6a66; --line:#e3e1dc;
+  --brass:#a8711c; --brass-soft:#f3e7d2; --good:#2f7a4b; --bad:#b0352b;
+  --display:"Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --body:"Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121214; --surface:#1b1b1e; --ink:#efede8; --muted:#9a978f; --line:#2c2b2f;
+  --brass:#d9a24a; --brass-soft:#3a2e1a; --good:#6cc28e; --bad:#ef7d72; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121214; --surface:#1b1b1e; --ink:#efede8; --muted:#9a978f; --line:#2c2b2f;
+  --brass:#d9a24a; --brass-soft:#3a2e1a; --good:#6cc28e; --bad:#ef7d72; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body);padding-inline:16px;padding-top:env(safe-area-inset-top,0px)}
+button,input,textarea{font:inherit;color:inherit}
+.wrap{max-width:640px;margin:0 auto;padding-block:28px 64px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.label{font:500 11px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:6px}
+
+/* strings */
+.strings{position:fixed;inset:0;pointer-events:none;z-index:0;display:flex;flex-direction:column;justify-content:center;gap:22px;opacity:.55}
+.strings i{display:block;height:1px;background:var(--line)}
+.strings i:nth-child(n+4){height:1.5px}
+.strings i:nth-child(n+5){height:2px}
+main{position:relative;z-index:1}
+
+/* login */
+#login{min-height:calc(100vh - 56px);display:grid;align-content:center;gap:28px}
+.wordmark{font:400 clamp(56px,14vw,96px)/.9 var(--display);letter-spacing:-.01em;margin:0;text-wrap:balance}
+.wordmark em{color:var(--brass)}
+.sub{color:var(--muted);margin:0;max-width:34ch}
+.pwrow{display:flex;gap:8px;max-width:420px}
+.field{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;outline:none;transition:border-color .15s}
+.field:focus{border-color:var(--brass)}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:12px 18px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.brass{background:var(--brass);color:#fff}
+.ghost{background:none;border:0;color:var(--muted);cursor:pointer;padding:6px 8px;border-radius:8px}
+.ghost:hover{color:var(--ink)}
+.err{color:var(--bad);min-height:1.5em;margin:0}
+
+/* app */
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:36px}
+.brand{font:400 26px/1 var(--display);white-space:nowrap}
+@media (max-width:460px){.brand{font-size:22px}.topr{gap:2px}.topr .ghost{padding:6px 5px}.date{font-size:12px;padding:5px 6px}}
+.brand em{color:var(--brass)}
+a.brand{color:inherit;text-decoration:none}
+.topr{display:flex;align-items:center;gap:6px}
+.date{background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:500 13px var(--mono)}
+section{display:grid;gap:14px;margin-bottom:40px}
+.today{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:flex;align-items:baseline;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer}
+.chip .mono{font-size:12px;color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--brass);background:var(--brass-soft)}
+.chip .unknown{font-size:11px;color:var(--brass)}
+.note{color:var(--muted);font-size:13px;margin:0}
+.combo{position:relative}
+.menu{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.12);z-index:5;max-height:320px;overflow:auto;padding:6px}
+.opt{display:flex;align-items:baseline;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer}
+.opt[aria-selected="true"]{background:var(--brass-soft)}
+.opt .code{font:600 12px var(--mono);color:var(--brass);min-width:7ch}
+.opt .nm{flex:1;min-width:0}
+.opt .path{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%}
+
+.who{display:grid;gap:4px;padding-top:4px}
+.who h2{font:400 clamp(40px,10vw,64px)/1 var(--display);margin:0;text-wrap:balance}
+.who .meta{color:var(--muted);font-size:13px}
+.newtag{display:inline-block;font-size:12px;color:var(--brass);border:1px solid var(--brass);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle}
+
+.rows{display:grid;gap:8px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 108px 36px;gap:8px;align-items:start}
+.row .ex .field{width:100%}
+.picked{font-size:12px;color:var(--muted);padding:4px 2px 0;display:flex;gap:8px;flex-wrap:wrap}
+.picked b{font-weight:500;color:var(--ink)}
+.pb{color:var(--brass)}
+.pb.up{color:var(--good);font-weight:600}
+.bpm{position:relative}
+.bpm .field{width:100%;font:700 20px var(--mono);text-align:right;padding-right:46px}
+.bpm span{position:absolute;right:12px;top:15px;font:500 11px var(--mono);color:var(--muted);pointer-events:none}
+.x{height:48px;width:36px;border-radius:10px}
+.addrow{justify-self:start}
+.paste{display:grid;gap:8px}
+.paste textarea{min-height:120px;resize:vertical;font:13px/1.6 var(--mono)}
+.foot{position:sticky;bottom:0;padding-block:14px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--bg) 70%,transparent);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.foot .btn{padding:14px 22px;font-size:16px}
+.status{font-size:13px;color:var(--muted)}
+.status.ok{color:var(--good)}
+.status.bad{color:var(--bad)}
+.done{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:8px}
+.done h3{font:400 28px/1.1 var(--display);margin:0}
+.done ul{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.done li{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--brass);margin-right:8px;animation:beat 1s infinite}
+/* calendar colours, taken from Aaron's iPhone Calendar */
+:root{--cal-personal:#ec13fa;--cal-offline:#f09288;--cal-swaralaya:#ffd303}
+.tag{display:inline-flex;align-items:center;gap:5px;font:600 10px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tag::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--cal,var(--muted))}
+.tag.Personal{--cal:var(--cal-personal)}
+.tag.Offline{--cal:var(--cal-offline)}
+.tag.Swaralaya{--cal:var(--cal-swaralaya)}
+.chip{border-left-width:3px}
+.chip.Personal{border-left-color:var(--cal-personal)}
+.chip.Offline{border-left-color:var(--cal-offline)}
+.chip.Swaralaya{border-left-color:var(--cal-swaralaya)}
+.todayhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.refresh{display:flex;align-items:baseline;gap:6px;font-size:12px;color:var(--muted)}
+.refresh button{font-size:13px}
+.refresh button.spin span{display:inline-block;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.settings{display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.settings h3{font:400 26px/1.1 var(--display);margin:0}
+.calrow{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:8px;align-items:center}
+.calrow .ok{font-size:12px;color:var(--good)}
+.how{margin:0;padding-left:18px;color:var(--muted);font-size:13px;display:grid;gap:4px}
+@media (max-width:460px){.calrow{grid-template-columns:1fr auto}.calrow .field{grid-column:1/-1;grid-row:2}}
+@keyframes beat{0%,100%{transform:scale(.7);opacity:.5}10%{transform:scale(1.15);opacity:1}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}*{transition:none!important}}
+@media (max-width:460px){.row{grid-template-columns:minmax(0,1fr) 96px 28px}.opt .path{display:none}.bpm .field{font-size:18px;padding-right:34px;padding-left:8px}.bpm span{right:8px;font-size:10px}}
+/* pages */
+header.top{flex-wrap:wrap;row-gap:14px;margin-bottom:28px}
+.tabs{display:flex;gap:4px;order:2;flex:1 1 auto;justify-content:center}
+.tabs a{color:var(--muted);text-decoration:none;font-weight:500;padding:6px 12px;border-radius:999px;white-space:nowrap}
+.tabs a:hover{color:var(--ink)}
+.tabs a[aria-current="page"]{background:var(--ink);color:var(--bg)}
+.lock{order:3}
+@media (max-width:560px){.tabs{order:4;flex-basis:100%;justify-content:flex-start;border-top:1px solid var(--line);padding-top:12px}.tabs a{padding:6px 10px}}
+.logbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:28px}
+.pagehead{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.pagetitle{font:400 clamp(36px,9vw,52px)/1 var(--display);margin:0}
+.list{display:grid;border-top:1px solid var(--line)}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:baseline;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:14px 4px;cursor:pointer}
+.srow:hover{background:var(--surface)}
+.srow .nm{font:400 24px/1.1 var(--display)}
+.srow .sm{font-size:12px;color:var(--muted);grid-column:1}
+.srow .ct{font:500 13px var(--mono);color:var(--muted);grid-row:1/3;grid-column:2;align-self:center}
+.back{justify-self:start;padding-left:0;margin-bottom:10px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:22px 0 34px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat b{display:block;font:700 22px var(--mono)}
+.stat span{font-size:12px;color:var(--muted)}
+.grp{margin-bottom:30px;display:grid;gap:0}
+.grp .label{padding-bottom:8px;border-bottom:1px solid var(--line)}
+.prog{display:grid;grid-template-columns:minmax(0,1fr) 104px 64px;gap:12px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line)}
+.prog .nm{min-width:0}
+.prog .nm b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prog .nm small{font-size:12px;color:var(--muted)}
+.prog .nm small .code{font:600 11px var(--mono);color:var(--brass);margin-right:6px}
+.prog svg{width:104px;height:30px;overflow:visible}
+.prog svg polyline{fill:none;stroke:var(--brass);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.prog svg circle{fill:var(--brass)}
+.prog .sc{text-align:right}
+.prog .sc b{display:block;font:700 18px var(--mono)}
+.prog .sc small{font:500 11px var(--mono);color:var(--muted)}
+.prog .sc small.up{color:var(--good)}
+.hist{display:grid;gap:22px}
+.day{display:grid}
+.day h3{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0 0 4px;padding-bottom:8px;border-bottom:1px solid var(--line);font:400 24px/1.1 var(--display)}
+.day h3 small{font:500 12px var(--body);color:var(--muted)}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line)}
+.lrow .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrow .nm .code{font:600 11px var(--mono);color:var(--brass);margin-right:8px}
+.lrow .sc{font:700 15px var(--mono)}
+.lrow .acts{display:flex;gap:4px;align-items:center}
+.lrow .del{color:var(--muted);font-size:13px}
+.lrow .del:hover,.lrow .yes{color:var(--bad)}
+.lrow .yes{font-weight:600}
+.lrow.gone{opacity:.4;text-decoration:line-through}
+.more{justify-self:center}
+select.field{width:100%;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px}
+@media (max-width:460px){.prog{grid-template-columns:minmax(0,1fr) 72px 56px;gap:8px}.prog svg{width:72px}.stat b{font-size:18px}}
+.progress-link{justify-self:start;color:var(--brass);font-size:13px;font-weight:500;text-decoration:none;margin-top:4px}
+.progress-link:hover{text-decoration:underline}
+.srow[aria-selected="true"]{background:var(--brass-soft)}
+.done .when{font:500 12px var(--body);color:var(--muted)}
+body.in .strings{display:none}
+</style>
+
+</head>
+<body>
+<div class="strings" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<main class="wrap">
+
+  <!-- LOGIN -->
+  <div id="login">
+    <h1 class="wordmark">Marks<br><em>Music</em></h1>
+    <p class="sub">Class log for Aaron Mark's guitar students. Enter the password to start logging.</p>
+    <form id="loginForm" class="pwrow" autocomplete="off">
+      <input id="pw" class="field" type="password" placeholder="Password" aria-label="Password" autofocus>
+      <button id="enter" class="btn" type="submit">Enter</button>
+    </form>
+    <p id="loginErr" class="err" role="alert"></p>
+  </div>
+
+  <!-- APP -->
+  <div id="app" hidden>
+    <header class="top">
+      <a id="brand" class="brand" href="#log" title="Back to the start">Marks <em>Music</em></a>
+      <nav class="tabs" aria-label="Pages">
+        <a href="#log" data-view="log">Log</a>
+        <a href="#dashboard" data-view="dashboard">Dashboard</a>
+        <a href="#history" data-view="history">Log History</a>
+      </nav>
+      <button id="lock" class="ghost lock" type="button">Lock</button>
+    </header>
+
+    <div id="view-log" class="view">
+    <div class="logbar">
+      <input id="classDate" class="date" type="date" aria-label="Class date">
+      <button id="calBtn" class="ghost" type="button">Calendars</button>
+    </div>
+
+    <section id="settings" class="settings" hidden aria-labelledby="setLbl">
+      <h3 id="setLbl">Calendars</h3>
+      <ol class="how">
+        <li>On the iPhone, open Calendar and tap Calendars at the bottom.</li>
+        <li>Tap ⓘ next to Personal, turn on Public Calendar, then tap Share Link and Copy.</li>
+        <li>Paste it below, and do the same for Offline and Swaralaya.</li>
+      </ol>
+      <div id="calRows" style="display:grid;gap:10px"></div>
+      <p class="note">Anyone with one of these links can see class names and times, so keep them private.</p>
+      <p id="calMsg" class="note" role="status"></p>
+    </section>
+
+    <section aria-labelledby="todayLbl">
+      <div class="todayhead">
+        <div class="label" id="todayLbl">Today's classes</div>
+        <div class="refresh"><span id="updated"></span><button id="refreshBtn" class="ghost" type="button" aria-label="Refresh classes"><span>↻</span> Refresh</button></div>
+      </div>
+      <div id="today" class="today"></div>
+      <p id="todayNote" class="note"><span class="pulse"></span>Checking the calendar…</p>
+    </section>
+
+    <section aria-labelledby="studentLbl">
+      <div class="label" id="studentLbl">Student</div>
+      <div class="combo">
+        <input id="studentInput" class="field" style="width:100%" placeholder="Type a student's name" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="studentMenu">
+        <div id="studentMenu" class="menu" role="listbox" hidden></div>
+      </div>
+      <div id="who" class="who" hidden>
+        <h2 id="whoName"></h2>
+        <div id="whoMeta" class="meta"></div>
+        <a id="whoProgress" class="progress-link" href="#dashboard" hidden>View progress →</a>
+      </div>
+    </section>
+
+    <section aria-labelledby="exLbl">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+        <div class="label" id="exLbl">Exercises</div>
+        <button id="pasteToggle" class="ghost" type="button">Paste notes</button>
+      </div>
+      <div id="pasteBox" class="paste" hidden>
+        <textarea id="pasteText" class="field" placeholder="FPE9 120&#10;G Scale 90&#10;Exc 1&amp;2 Waltz 100"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button id="pasteApply" class="btn" type="button">Add these</button>
+          <span id="pasteMsg" class="note"></span>
+        </div>
+      </div>
+      <div id="rows" class="rows"></div>
+      <button id="addRow" class="ghost addrow" type="button">+ Add exercise</button>
+    </section>
+
+    <div class="foot">
+      <button id="save" class="btn brass" type="button" disabled>Save class</button>
+      <span id="status" class="status" role="status"></span>
+    </div>
+    <div id="done" class="done" hidden></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="view" hidden>
+      <section id="dashTodaySec" hidden aria-labelledby="dashTodayLbl">
+        <div class="label" id="dashTodayLbl">Today's classes</div>
+        <div id="dashToday" class="today"></div>
+        <p id="dashTodayNote" class="note"></p>
+      </section>
+      <div id="dashList">
+        <section>
+          <div class="pagehead"><h2 class="pagetitle">Students</h2><span id="dashCount" class="note"></span></div>
+          <input id="dashFilter" class="field" placeholder="Find a student" autocomplete="off" aria-label="Find a student">
+          <div id="studentList" class="list"></div>
+        </section>
+      </div>
+      <div id="dashDetail" hidden>
+        <button id="dashBack" class="ghost back" type="button">← All students</button>
+        <div class="who"><h2 id="dName"></h2><div id="dMeta" class="meta"></div></div>
+        <div id="dStats" class="stats"></div>
+        <div id="dBody"></div>
+      </div>
+    </div>
+
+    <!-- LOG HISTORY -->
+    <div id="view-history" class="view" hidden>
+      <section>
+        <div class="pagehead"><h2 class="pagetitle">Log History</h2><span id="histCount" class="note"></span></div>
+        <select id="histStudent" class="field" aria-label="Show logs for"><option value="">All students</option></select>
+        <div id="histList" class="hist"></div>
+        <button id="histMore" class="ghost more" type="button" hidden>Load more</button>
+        <p id="histNote" class="note" role="status"></p>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+(() => {
+"use strict";
+const API = "https://jfylfmdzkfaprqmcoxwx.supabase.co/functions/v1/marks-api";
+const TYPES = ["Personal", "Offline", "Swaralaya"];
+const $ = id => document.getElementById(id);
+
+let PW = null, calendars = [];
+let students = [], items = [], itemById = new Map();
+let student = null;            // {id|null, name}
+let bests = new Map();         // item_id -> {best,last,last_date}
+let rows = [];                 // {key, item, bpm}
+let rowSeq = 0;
+
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch {} },
+  del(k){ try { localStorage.removeItem(k); } catch {} },
+};
+
+async function api(action, data = {}, pw = PW){
+  let res;
+  try {
+    res = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, pw, ...data }) });
+  } catch { throw { code: "offline" }; }
+  let body = {};
+  try { body = await res.json(); } catch {}
+  if (!res.ok) throw { code: body.error || "server_error", status: res.status };
+  return body;
+}
+function errText(e){
+  const c = e && e.code;
+  if (c === "wrong_password") return "That password isn't right.";
+  if (c === "offline") return "Can't reach the server. Check the internet connection and try again.";
+  if (c === "not_a_calendar") return "That link didn't return a calendar. Copy the Share Link again from Calendar.";
+  if (c === "bad_url") return "Paste the full link that starts with webcal:// or https://.";
+  return "Something went wrong on the server. Try again.";
+}
+
+/* ---------- shorthand codes ---------- */
+const PAT = p => {
+  p = (p || "").trim().toLowerCase();
+  if (!p || p === "downstroke") return "";
+  if (p === "waltz") return "Waltz";
+  if (p === "foxtrot") return "Foxtrot";
+  const m = p.match(/^strumming pattern (\d)$/); if (m) return "SP" + m[1];
+  return p;
+};
+const initials = s => s.replace(/[^a-z0-9 ]/gi, "").split(/\s+/).filter(Boolean).map(w => /^\d+$/.test(w) ? w : w.toLowerCase() === "birthday" ? "BD" : w[0].toUpperCase()).join("");
+const sp = (...a) => a.filter(Boolean).join(" ");
+// Explicit codes from Aaron's mapping file; these win over generated ones.
+const EXPLICIT = { "APE":1, "Alternative Picking":1, "T":120, "FJ":118, "BMH":128, "LHG":139, "WTSGMI Ch":153, "AG Ch":141, "MBLOTO Ch":145, "COM Ch":147, "CR Ch":165, "CR BCh":166, "ADN Ch":167, "LS Ch":157, "HBD BCh":130 };
+
+function codesFor(it){
+  const n = it.name.toLowerCase().trim(), out = [];
+  let m;
+  if ((m = n.match(/^finger planting - (\d+)\w* fret$/))) out.push("FPE" + m[1]);
+  else if (n === "alternative picking") out.push("APE", "AP");
+  else if (n === "warm up") out.push("WU");
+  else if ((m = n.match(/^open string - (major|minor) scale - ([a-g])$/))) { const K = m[2].toUpperCase(); out.push(...(m[1] === "major" ? [K + " Scale", K + " Maj Scale"] : [K + "m Scale", K + " Minor Scale"])); }
+  else if (n === "major scale pattern") out.push("MajSP");
+  else if (n === "minor scale pattern") out.push("MinSP");
+  else if ((m = n.match(/^(major|minor) scale pattern (\d)$/))) out.push((m[1] === "major" ? "MajSP" : "MinSP") + m[2]);
+  else if ((m = n.match(/^exercise (\d+&\d+) - (.+)$/))) out.push(sp("Exc " + m[1], PAT(m[2])));
+  else if ((m = n.match(/^([56])th string bar chord - (major|minor) - (.+)$/))) {
+    const base = m[1] + "SBC" + (m[2] === "minor" ? "m" : ""), P = PAT(m[3]);
+    out.push(sp(base, P), sp(base, "Exc", P));
+  }
+  else if ((m = n.match(/^chord scales - (major|minor) - ([a-g]) - (.+)$/))) out.push(sp(m[2].toUpperCase() + (m[1] === "minor" ? "m" : "") + " CS", PAT(m[3])));
+  else if ((m = n.match(/^(.+) - (open|bar) chords$/))) out.push(initials(m[1]) + (m[2] === "open" ? " Ch" : " BCh"));
+  else if ((m = n.match(/^([edcag]) form - (octaves|fifths)$/))) out.push(m[1].toUpperCase() + " Form " + m[2][0].toUpperCase() + m[2].slice(1));
+  else if ((m = n.match(/^([edcag]) form - (major|minor) - (triads|pentatonic|scale)$/))) {
+    const F = m[1].toUpperCase() + " Form", T = m[3][0].toUpperCase() + m[3].slice(1);
+    out.push(...(m[2] === "major" ? [F + " " + T, F + " Major " + T] : [F + " Minor " + T]));
+  }
+  else if (it.cat === "melodies") out.push(initials(n));
+  return out;
+}
+const norm = s => String(s || "").toLowerCase().replace(/\s*&\s*/g, "&").replace(/\s+/g, " ").trim();
+const tidy = s => String(s || "").replace(/\b\w/g, c => c.toUpperCase());
+
+function buildIndex(){
+  const codeOwner = new Map();
+  for (const it of items) {
+    it.codes = codesFor(it);
+    it.label = tidy(it.name);
+    it.path = [it.cat, it.sub].filter(Boolean).map(tidy).join(" · ");
+    it.hay = norm([it.name, it.sub, it.cat].join(" "));
+    for (const c of it.codes) if (!codeOwner.has(norm(c))) codeOwner.set(norm(c), it);
+  }
+  for (const [c, id] of Object.entries(EXPLICIT)) { const it = itemById.get(id); if (it) { codeOwner.set(norm(c), it); if (!it.codes.includes(c)) it.codes.unshift(c); } }
+  window.__codes = codeOwner;
+}
+function exact(qs){ return window.__codes.get(norm(qs)) || null; }
+function searchItems(qs){
+  const nq = norm(qs); if (!nq) return [];
+  const toks = nq.split(" ");
+  const scored = [];
+  for (const it of items) {
+    let s = 0;
+    for (const c of it.codes) { const nc = norm(c); if (nc === nq) s = Math.max(s, 100); else if (nc.startsWith(nq)) s = Math.max(s, 80 - (nc.length - nq.length)); }
+    if (s < 50 && toks.every(t => it.hay.includes(t))) s = Math.max(s, 50 - it.name.length / 100);
+    if (s > 0) scored.push([s, it]);
+  }
+  return scored.sort((a, b) => b[0] - a[0]).slice(0, 8).map(x => x[1]);
+}
+
+/* ---------- combobox ---------- */
+function combo(input, menu, source, render, onPick){
+  let opts = [], active = 0;
+  const close = () => { menu.hidden = true; input.setAttribute("aria-expanded", "false"); };
+  const draw = () => {
+    menu.innerHTML = "";
+    opts.forEach((o, i) => {
+      const d = document.createElement("div");
+      d.className = "opt"; d.setAttribute("role", "option"); d.setAttribute("aria-selected", i === active);
+      render(d, o);
+      d.addEventListener("mousedown", ev => { ev.preventDefault(); onPick(o); close(); });
+      menu.appendChild(d);
+    });
+    menu.hidden = !opts.length; input.setAttribute("aria-expanded", String(!!opts.length));
+  };
+  input.addEventListener("input", () => { opts = source(input.value); active = 0; draw(); });
+  input.addEventListener("focus", () => { opts = source(input.value); active = 0; draw(); });
+  input.addEventListener("blur", () => setTimeout(close, 120));
+  input.addEventListener("keydown", ev => {
+    if (ev.key === "ArrowDown" && opts.length) { active = (active + 1) % opts.length; draw(); ev.preventDefault(); }
+    else if (ev.key === "ArrowUp" && opts.length) { active = (active - 1 + opts.length) % opts.length; draw(); ev.preventDefault(); }
+    else if (ev.key === "Enter") { ev.preventDefault(); if (!menu.hidden && opts[active]) { onPick(opts[active]); close(); } else onPick(null); }
+    else if (ev.key === "Escape") close();
+  });
+}
+
+/* ---------- students ---------- */
+function matchStudent(name){
+  const n = norm(name); if (!n) return null;
+  return students.find(s => norm(s.name) === n)
+      || students.find(s => norm(s.name).split(" ")[0] === n.split(" ")[0] && n.split(" ")[0].length > 2)
+      || students.find(s => norm(s.name).includes(n) || n.includes(norm(s.name)))
+      || null;
+}
+async function pickStudent(s, typedName){
+  student = s ? { id: s.id, name: s.name } : { id: null, name: typedName.trim() };
+  $("studentInput").value = student.name;
+  $("who").hidden = false;
+  $("whoName").textContent = student.name;
+  document.querySelectorAll("#today .chip").forEach(c => c.setAttribute("aria-pressed", String(norm(c.dataset.name) === norm(student.name))));
+  bests = new Map();
+  $("whoProgress").hidden = !student.id;
+  loadDayLogs();
+  if (!student.id) { $("whoMeta").innerHTML = 'First class on record<span class="newtag">New student</span>'; refreshRows(); updateSave(); return; }
+  $("whoMeta").textContent = "Loading their best scores…";
+  try {
+    const r = await api("bests", { student_id: Number(student.id) });
+    (r.bests || []).forEach(b => bests.set(b.item_id, b));
+    const last = r.last_class ? new Date(r.last_class + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "none yet";
+    $("whoMeta").textContent = `${r.classes} logged classes · last class ${last} · ${bests.size} exercises tracked`;
+  } catch (e) { $("whoMeta").textContent = errText(e); }
+  refreshRows(); updateSave();
+}
+
+/* ---------- exercise rows ---------- */
+function addRow(item = null, bpm = ""){
+  const r = { key: ++rowSeq, item, bpm: bpm === "" ? "" : String(bpm) };
+  rows.push(r); drawRow(r); updateSave(); return r;
+}
+function drawRow(r){
+  const el = document.createElement("div");
+  el.className = "row"; el.dataset.key = r.key;
+  el.innerHTML = `
+    <div class="ex combo">
+      <input class="field" id="ex-${r.key}" placeholder="FPE9, G Scale, Exc 1&2 Waltz…" autocomplete="off" role="combobox" aria-label="Exercise">
+      <div class="menu" role="listbox" hidden></div>
+      <div class="picked"></div>
+    </div>
+    <div class="bpm"><input class="field" id="bpm-${r.key}" inputmode="numeric" placeholder="—" aria-label="BPM"><span>BPM</span></div>
+    <button class="ghost x" type="button" aria-label="Remove exercise">×</button>`;
+  $("rows").appendChild(el);
+  const ex = el.querySelector(".ex input"), menu = el.querySelector(".menu"), bpm = el.querySelector(".bpm input");
+  ex.value = r.item ? (r.item.codes[0] || r.item.label) : "";
+  bpm.value = r.bpm;
+  combo(ex, menu, searchItems, (d, it) => {
+    d.innerHTML = `<span class="code"></span><span class="nm"></span><span class="path"></span>`;
+    d.children[0].textContent = it.codes[0] || "";
+    d.children[1].textContent = it.label;
+    d.children[2].textContent = it.path;
+  }, it => {
+    if (!it) it = exact(ex.value);
+    if (!it) return;
+    r.item = it; ex.value = it.codes[0] || it.label; paintPicked(r, el); updateSave(); bpm.focus(); bpm.select();
+  });
+  ex.addEventListener("change", () => { const it = exact(ex.value); if (it) { r.item = it; ex.value = it.codes[0] || it.label; } else if (!r.item || norm(ex.value) !== norm(r.item.codes[0] || r.item.label)) r.item = null; paintPicked(r, el); updateSave(); });
+  bpm.addEventListener("input", () => { bpm.value = bpm.value.replace(/[^\d.]/g, ""); r.bpm = bpm.value; paintPicked(r, el); updateSave(); });
+  bpm.addEventListener("keydown", ev => {
+    if (ev.key === "Enter") { ev.preventDefault(); if (!$("save").disabled) save(); else setStatus(student ? "Pick an exercise and a BPM first." : "Pick a student first.", "bad"); }
+    else if (ev.key === "ArrowDown") { ev.preventDefault(); if (rows[rows.length - 1] === r) addRow(); focusRow(rows[rows.indexOf(r) + 1]); }
+    else if (ev.key === "ArrowUp" && rows.indexOf(r) > 0) { ev.preventDefault(); $("bpm-" + rows[rows.indexOf(r) - 1].key)?.focus(); }
+  });
+  el.querySelector(".x").addEventListener("click", () => { rows = rows.filter(x => x !== r); el.remove(); if (!rows.length) addRow(); updateSave(); });
+  paintPicked(r, el);
+}
+function focusRow(r){ if (r) $("ex-" + r.key)?.focus(); }
+function paintPicked(r, el = document.querySelector(`.row[data-key="${r.key}"]`)){
+  if (!el) return;
+  const p = el.querySelector(".picked");
+  p.innerHTML = "";
+  if (!r.item) { if (el.querySelector(".ex input").value.trim()) p.textContent = "Pick an exercise from the list"; return; }
+  const b = document.createElement("b"); b.textContent = r.item.label; p.appendChild(b);
+  const best = bests.get(r.item.id);
+  const s = document.createElement("span");
+  const v = parseFloat(r.bpm);
+  if (best) {
+    s.className = "pb" + (v > best.best ? " up" : "");
+    s.textContent = v > best.best ? `New best · was ${best.best}` : `Best ${best.best} · last ${best.last}`;
+  } else if (student) { s.className = "pb"; s.textContent = "First time"; }
+  p.appendChild(s);
+}
+function refreshRows(){ rows.forEach(r => paintPicked(r)); }
+function ready(){ return rows.filter(r => r.item && parseFloat(r.bpm) > 0); }
+function updateSave(){
+  const n = ready().length;
+  $("save").disabled = !(student && student.name && n);
+  $("save").textContent = n ? `Save class · ${n} exercise${n > 1 ? "s" : ""}` : "Save class";
+}
+
+/* ---------- paste notes ---------- */
+function applyPaste(){
+  const lines = $("pasteText").value.split(/\n+/).map(s => s.trim()).filter(Boolean);
+  const missed = [];
+  rows.filter(r => !r.item && !r.bpm).forEach(r => { document.querySelector(`.row[data-key="${r.key}"]`)?.remove(); });
+  rows = rows.filter(r => r.item || r.bpm);
+  for (const line of lines) {
+    const m = line.match(/^(.*?)\s+(\d+(?:\.\d+)?)$/);
+    const code = m ? m[1] : line, bpm = m ? m[2] : "";
+    const it = exact(code) || (searchItems(code)[0] && norm(searchItems(code)[0].codes[0] || "") === norm(code) ? searchItems(code)[0] : null);
+    if (it) addRow(it, bpm); else missed.push(line);
+  }
+  if (!rows.length) addRow();
+  $("pasteMsg").textContent = missed.length ? `Couldn't match: ${missed.join(", ")}` : `Added ${lines.length} line${lines.length === 1 ? "" : "s"}.`;
+  if (!missed.length) { $("pasteText").value = ""; $("pasteBox").hidden = true; }
+}
+
+/* ---------- save ---------- */
+async function save(){
+  const entries = ready().map(r => ({ item_id: r.item.id, score: parseFloat(r.bpm) }));
+  const date = $("classDate").value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { setStatus("Pick a class date.", "bad"); return; }
+  $("save").disabled = true; setStatus("Saving…");
+  try {
+    const r = await api("log", { student_id: student.id ? Number(student.id) : null, student_name: student.name, date, entries });
+    saveNote = [r.created_student && "Added as a new student", r.inserted && `${r.inserted} saved`, r.updated && `${r.updated} raised to a higher score`, r.kept && `${r.kept} already had a higher score that day`].filter(Boolean).join(" · ");
+    savedMarks = new Map(entries.map(e => { const b = bests.get(e.item_id); return [e.item_id, !b ? "first" : e.score > b.best ? "new best" : ""]; }));
+    if (r.created_student) { students.push({ id: r.student_id, name: student.name }); fillHistStudents(); }
+    setStatus("Saved.", "ok");
+    rows.forEach(x => document.querySelector(`.row[data-key="${x.key}"]`)?.remove()); rows = []; addRow();
+    await pickStudent({ id: r.student_id, name: student.name });
+    focusRow(rows[0]);
+  } catch (e) {
+    setStatus(e && (e.code === "offline" || e.code === "server_error")
+      ? "The save may not have gone through. Check before saving again."
+      : errText(e), "bad");
+    updateSave();
+  }
+}
+// Under Save class: everything saved for this student on the selected date.
+let saveNote = "", savedMarks = new Map(), daySeq = 0;
+async function loadDayLogs(){
+  const d = $("done"), seq = ++daySeq, date = $("classDate").value;
+  if (!student || !student.id || !/^\d{4}-\d{2}-\d{2}$/.test(date)) { d.hidden = true; return; }
+  try {
+    const logs = (await api("day_logs", { student_id: Number(student.id), date })).logs || [];
+    if (seq !== daySeq) return;
+    const note = saveNote, marks = savedMarks; saveNote = ""; savedMarks = new Map();
+    d.innerHTML = "";
+    if (!logs.length) { d.hidden = true; return; }
+    d.hidden = false;
+    const h = document.createElement("h3");
+    h.textContent = `${student.name}, ${fmtDay(date, { weekday: "short", day: "numeric", month: "short" })}`;
+    const meta = document.createElement("div"); meta.className = "note";
+    meta.textContent = (note ? note + " · " : "") + `${logs.length} exercise${logs.length === 1 ? "" : "s"} logged this day`;
+    const ul = document.createElement("ul");
+    for (const l of logs) {
+      const it = itemById.get(l.item_id) || { label: "Exercise " + l.item_id, codes: [] }, li = document.createElement("li");
+      const a = document.createElement("span"); a.textContent = it.label;
+      const c = codeOf(it); if (c) { const k = document.createElement("span"); k.className = "when"; k.textContent = "  " + c; a.appendChild(k); }
+      const m = marks.get(l.item_id) || "";
+      const sc = document.createElement("span"); sc.className = "mono" + (m ? " pb up" : "");
+      sc.textContent = l.score + (m ? "  " + m : "");
+      li.append(a, sc); ul.appendChild(li);
+    }
+    d.append(h, meta, ul);
+  } catch (e) { if (seq === daySeq) { d.hidden = true; } }
+}
+function setStatus(t, k = ""){ const s = $("status"); s.textContent = t; s.className = "status " + k; }
+
+/* ---------- today's classes ---------- */
+function localISO(d){ const p = n => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; }
+// Classes are read fresh from the calendars on every load, so an event deleted
+// in Calendar disappears here on the next refresh.
+let todaySeq = 0;
+async function loadToday(quiet = false){
+  const box = $("today"), note = $("todayNote"), btn = $("refreshBtn");
+  const seq = ++todaySeq;
+  if (!calendars.length) { box.innerHTML = ""; $("updated").textContent = ""; $("dashTodaySec").hidden = true; note.textContent = "No calendars connected yet. Tap Calendars at the top to add them, or type the student's name below."; return; }
+  const day = $("classDate").value || localISO(new Date());
+  const start = new Date(day + "T00:00:00"), end = new Date(start.getTime()); end.setDate(end.getDate() + 1);
+  btn.classList.add("spin");
+  if (!quiet) { box.innerHTML = ""; note.innerHTML = '<span class="pulse"></span>Checking the calendar…'; }
+  try {
+    const r = await api("today", { start: start.toISOString(), end: end.toISOString() });
+    if (seq !== todaySeq) return;
+    // Only classes that have already started show up; later ones appear once their start time passes.
+    const now = new Date();
+    const all = (r.events || []).filter(e => e.summary);
+    const evs = all.filter(e => new Date(e.start) <= now);
+    const next = all.find(e => new Date(e.start) > now);
+    const nextNote = next ? ` Next: ${next.summary.trim()} at ${new Date(next.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.` : "";
+    const failed = (r.failed || []).length ? ` Couldn't read ${r.failed.join(" and ")}.` : "";
+    box.innerHTML = "";
+    $("updated").textContent = "Updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    drawDashToday(evs, (evs.length ? "Tap a class to see that student's progress." : all.length ? "No class has started yet." : "No classes on the calendar for this day.") + nextNote + failed);
+    if (!evs.length) { note.textContent = (all.length ? "No class has started yet." : "No classes on the calendar for this day. Type the student's name below.") + nextNote + failed; return; }
+    note.textContent = "From the class calendars. Tap a class to log it." + nextNote + failed;
+    for (const e of evs) {
+      const { c, known, name } = classChip(e);
+      if (!known) { const u = document.createElement("span"); u.className = "unknown"; u.textContent = "new"; c.appendChild(u); }
+      c.addEventListener("click", () => { pickStudent(known, name); focusRow(rows[0]); });
+      box.appendChild(c);
+    }
+    if (student) document.querySelectorAll("#today .chip").forEach(c => c.setAttribute("aria-pressed", String(norm(c.dataset.name) === norm(student.name))));
+  } catch (e) {
+    if (seq !== todaySeq) return;
+    if (!quiet) note.textContent = errText(e) + " You can still type the name below.";
+  } finally {
+    if (seq === todaySeq) btn.classList.remove("spin");
+  }
+}
+
+/* ---------- calendar settings ---------- */
+function drawCalRows(){
+  const box = $("calRows"); box.innerHTML = "";
+  for (const type of TYPES) {
+    const row = document.createElement("div"); row.className = "calrow";
+    const on = calendars.includes(type);
+    row.innerHTML = `<span><span class="tag ${type}"></span></span><input class="field" id="cal-${type}" placeholder="webcal://p…icloud.com/published/…" autocomplete="off" inputmode="url"><button class="btn" type="button"></button>`;
+    row.querySelector(".tag").textContent = type;
+    const input = row.querySelector("input"), btn = row.querySelector("button");
+    input.placeholder = on ? "Connected · paste a new link to replace it" : "webcal://p…icloud.com/published/…";
+    btn.textContent = on ? "Remove" : "Connect";
+    input.addEventListener("input", () => { btn.textContent = input.value.trim() ? "Connect" : (on ? "Remove" : "Connect"); });
+    btn.addEventListener("click", async () => {
+      const url = input.value.trim();
+      if (!url && !on) { $("calMsg").textContent = `Paste the ${type} link first.`; return; }
+      btn.disabled = true; $("calMsg").textContent = url ? `Checking the ${type} calendar…` : `Removing ${type}…`;
+      try {
+        await api("set_calendar", { type, url });
+        calendars = url ? [...new Set([...calendars, type])] : calendars.filter(c => c !== type);
+        $("calMsg").textContent = url ? `${type} connected.` : `${type} removed.`;
+        drawCalRows(); loadToday();
+      } catch (e) { $("calMsg").textContent = errText(e); btn.disabled = false; }
+    });
+    box.appendChild(row);
+  }
+}
+
+/* ---------- pages ---------- */
+const VIEWS = ["log", "dashboard", "history"];
+let dashStudents = null, dashOpen = null;      // cached Dashboard list, open student id
+let hist = { sid: "", rows: [], total: 0 };
+const fmtDay = (d, opts = { weekday: "short", day: "numeric", month: "short", year: "numeric" }) => new Date(d + "T00:00:00").toLocaleDateString(undefined, opts);
+const codeOf = it => { const c = it.codes[0] || ""; return norm(c) === norm(it.label) ? "" : c; };
+const nameOf = id => (students.find(s => s.id === id) || {}).name || "Unknown student";
+
+function showView(){
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "log";
+  for (const k of VIEWS) $("view-" + k).hidden = k !== v;
+  document.querySelectorAll(".tabs a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
+  if (v === "dashboard") loadDashboard();
+  if (v === "history") loadHistory();
+  window.scrollTo(0, 0);
+}
+
+function classChip(e){
+  const name = e.summary.trim(), known = matchStudent(name);
+  const allDay = e.end && (new Date(e.end) - new Date(e.start)) >= 86400000;
+  const c = document.createElement("button");
+  c.type = "button"; c.className = "chip " + e.type; c.dataset.name = known ? known.name : name; c.setAttribute("aria-pressed", "false");
+  c.innerHTML = `<span class="mono"></span><span></span><span class="tag"></span>`;
+  c.children[0].textContent = allDay ? "All day" : new Date(e.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  c.children[1].textContent = known ? known.name : name;
+  c.children[2].textContent = e.type; c.children[2].classList.add(e.type);
+  return { c, known, name };
+}
+function drawDashToday(evs, text){
+  const box = $("dashToday"); box.innerHTML = "";
+  $("dashTodaySec").hidden = false; $("dashTodayNote").textContent = text;
+  for (const e of evs) {
+    const { c, known, name } = classChip(e);
+    c.addEventListener("click", () => known ? openProgress(known.id, known.name) : ($("dashTodayNote").textContent = `${name} isn't a saved student yet, so there's no progress to show.`));
+    box.appendChild(c);
+  }
+}
+// Opens a student's progress page from anywhere in the app.
+async function openProgress(id, name){
+  dashOpen = id;
+  if (location.hash !== "#dashboard") location.hash = "dashboard";
+  let st = dashStudents && dashStudents.find(x => x.id === id);
+  if (!st) {
+    try { dashStudents = (await api("students")).students || []; drawStudentList(); } catch {}
+    st = (dashStudents || []).find(x => x.id === id) || { id, name };
+  }
+  if (dashOpen === id) openStudent(st);
+}
+
+/* Dashboard: every student, newest class first; tap one for their progress per exercise. */
+async function loadDashboard(){
+  if (dashOpen) return;
+  const box = $("studentList");
+  if (!dashStudents) box.innerHTML = '<p class="note"><span class="pulse"></span>Loading students…</p>';
+  try {
+    dashStudents = (await api("students")).students || [];
+    drawStudentList();
+  } catch (e) { if (!dashStudents) box.innerHTML = ""; $("dashCount").textContent = errText(e); }
+}
+let dashActive = -1;
+function moveDash(step){
+  const rowsEl = [...document.querySelectorAll("#studentList .srow")]; if (!rowsEl.length) return;
+  dashActive = Math.max(0, Math.min(rowsEl.length - 1, dashActive + step));
+  rowsEl.forEach((el, i) => el.setAttribute("aria-selected", String(i === dashActive)));
+  rowsEl[dashActive].scrollIntoView({ block: "nearest" });
+}
+function drawStudentList(){
+  const box = $("studentList"), n = norm($("dashFilter").value);
+  const list = dashStudents.filter(s => !n || norm(s.name).includes(n));
+  $("dashCount").textContent = `${dashStudents.length} students`;
+  box.innerHTML = ""; dashActive = -1;
+  if (!list.length) { box.innerHTML = '<p class="note" style="padding:14px 4px">No student by that name.</p>'; return; }
+  for (const st of list) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "srow";
+    b.innerHTML = '<span class="nm"></span><span class="sm"></span><span class="ct"></span>';
+    b.children[0].textContent = st.name;
+    b.children[1].textContent = st.last_class ? "Last class " + fmtDay(st.last_class) : "No classes logged yet";
+    b.children[2].textContent = st.exercises ? `${st.exercises} exercise${st.exercises === 1 ? "" : "s"}` : "";
+    b.addEventListener("click", () => openStudent(st));
+    box.appendChild(b);
+  }
+}
+async function openStudent(st){
+  dashOpen = st.id;
+  $("dashList").hidden = true; $("dashDetail").hidden = false; window.scrollTo(0, 0);
+  $("dName").textContent = st.name;
+  $("dMeta").textContent = st.first_class ? `Logging since ${fmtDay(st.first_class, { month: "short", year: "numeric" })}` : "No classes logged yet";
+  $("dStats").innerHTML = ""; $("dBody").innerHTML = '<p class="note"><span class="pulse"></span>Loading progress…</p>';
+  try {
+    const logs = (await api("student_history", { student_id: st.id })).logs || [];
+    if (dashOpen !== st.id) return;
+    drawProgress(st, logs);
+  } catch (e) { if (dashOpen === st.id) $("dBody").innerHTML = `<p class="note">${errText(e)}</p>`; }
+}
+function spark(points){
+  const W = 100, H = 26, vals = points.map(p => p.score);
+  const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const xy = points.map((p, i) => [points.length === 1 ? W : (i / (points.length - 1)) * W, H - ((p.score - lo) / span) * H + 2]);
+  const [lx, ly] = xy[xy.length - 1];
+  return `<svg viewBox="0 0 ${W} ${H + 4}" preserveAspectRatio="none" aria-hidden="true">${points.length > 1 ? `<polyline vector-effect="non-scaling-stroke" points="${xy.map(p => p.join(",")).join(" ")}"/>` : ""}<circle cx="${lx}" cy="${ly}" r="2.6"/></svg>`;
+}
+function drawProgress(st, logs){
+  const byItem = new Map();
+  for (const l of logs) { if (!byItem.has(l.item_id)) byItem.set(l.item_id, []); byItem.get(l.item_id).push(l); }
+  const days = new Set(logs.map(l => l.date));
+  let raised = 0;
+  const rowsOut = [...byItem].map(([id, pts]) => {
+    const it = itemById.get(id) || { label: "Exercise " + id, codes: [], cat: "other" };
+    const best = Math.max(...pts.map(p => p.score)), first = pts[0].score, last = pts[pts.length - 1];
+    if (best > first) raised++;
+    return { it, pts, best, first, last };
+  });
+  const stat = (v, t) => `<div class="stat"><b>${v}</b><span>${t}</span></div>`;
+  $("dStats").innerHTML = stat(days.size, "classes") + stat(byItem.size, "exercises") + stat(raised, "improved");
+  const body = $("dBody"); body.innerHTML = "";
+  if (!rowsOut.length) { body.innerHTML = '<p class="note">No scores logged for this student yet.</p>'; return; }
+  const groups = new Map();
+  const pos = it => { const i = items.indexOf(it); return i < 0 ? 1e9 : i; };
+  for (const r of rowsOut.sort((a, b) => pos(a.it) - pos(b.it))) {
+    const g = tidy(r.it.cat || "other");
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push(r);
+  }
+  for (const [g, list] of groups) {
+    const sec = document.createElement("div"); sec.className = "grp";
+    sec.innerHTML = '<div class="label"></div>'; sec.firstChild.textContent = g;
+    for (const r of list) {
+      const el = document.createElement("div"); el.className = "prog";
+      const gain = r.best - r.first;
+      el.innerHTML = `<div class="nm"><b></b><small><span class="code"></span><span class="when"></span></small></div>${spark(r.pts)}<div class="sc"><b></b><small></small></div>`;
+      el.querySelector("b").textContent = r.it.label;
+      el.querySelector(".code").textContent = codeOf(r.it);
+      el.querySelector(".when").textContent = `${r.pts.length}× · last ${fmtDay(r.last.date, { day: "numeric", month: "short" })} at ${r.last.score}`;
+      el.querySelector(".sc b").textContent = r.best;
+      const sm = el.querySelector(".sc small");
+      sm.textContent = gain > 0 ? `+${gain} BPM` : "best BPM"; if (gain > 0) sm.className = "up";
+      el.title = r.pts.map(p => `${fmtDay(p.date, { day: "numeric", month: "short" })}: ${p.score}`).join("\n");
+      sec.appendChild(el);
+    }
+    body.appendChild(sec);
+  }
+  const link = document.createElement("a"); link.href = "#history"; link.className = "ghost"; link.textContent = "See every log for " + st.name + " →";
+  link.addEventListener("click", () => { $("histStudent").value = String(st.id); hist.sid = null; });
+  body.appendChild(link);
+}
+function closeStudent(){ dashOpen = null; $("dashDetail").hidden = true; $("dashList").hidden = false; loadDashboard(); }
+
+/* Log History: every saved score, newest first, with delete. */
+function fillHistStudents(){
+  const sel = $("histStudent"), keep = sel.value;
+  sel.innerHTML = '<option value="">All students</option>';
+  [...students].sort((a, b) => a.name.localeCompare(b.name)).forEach(s => { const o = document.createElement("option"); o.value = s.id; o.textContent = s.name.trim(); sel.appendChild(o); });
+  sel.value = keep;
+}
+async function loadHistory(more = false){
+  const sid = $("histStudent").value;
+  if (!more) { hist = { sid, rows: [], total: 0 }; $("histList").innerHTML = '<p class="note"><span class="pulse"></span>Loading logs…</p>'; $("histMore").hidden = true; }
+  $("histNote").textContent = "";
+  try {
+    const r = await api("history", { student_id: sid ? Number(sid) : null, limit: 200, offset: hist.rows.length });
+    if (hist.sid !== sid) return;
+    hist.rows.push(...(r.rows || [])); hist.total = r.total || 0;
+    drawHistory();
+  } catch (e) { if (!more) $("histList").innerHTML = ""; $("histNote").textContent = errText(e); }
+}
+function drawHistory(){
+  const box = $("histList"); box.innerHTML = "";
+  $("histCount").textContent = `${hist.total} log${hist.total === 1 ? "" : "s"}`;
+  $("histMore").hidden = hist.rows.length >= hist.total;
+  if (!hist.rows.length) { box.innerHTML = '<p class="note">No logs yet.</p>'; return; }
+  let cur = null, list = null;
+  for (const l of hist.rows) {
+    const key = l.date + "|" + l.student_id;
+    if (key !== cur) {
+      cur = key;
+      const day = document.createElement("div"); day.className = "day";
+      day.innerHTML = "<h3><span></span><small></small></h3>";
+      day.querySelector("span").textContent = nameOf(l.student_id);
+      day.querySelector("small").textContent = fmtDay(l.date);
+      box.appendChild(day); list = day;
+    }
+    list.appendChild(histRow(l));
+  }
+}
+function histRow(l){
+  const it = itemById.get(l.item_id) || { label: "Exercise " + l.item_id, codes: [] };
+  const el = document.createElement("div"); el.className = "lrow";
+  el.innerHTML = '<div class="nm"><span class="code"></span><span class="lb"></span></div><div class="sc"></div><div class="acts"><button class="ghost del" type="button">Delete</button></div>';
+  el.querySelector(".code").textContent = codeOf(it);
+  el.querySelector(".lb").textContent = it.label;
+  el.querySelector(".sc").textContent = l.score;
+  const acts = el.querySelector(".acts");
+  const reset = () => { acts.innerHTML = '<button class="ghost del" type="button">Delete</button>'; acts.firstChild.addEventListener("click", ask); };
+  const ask = () => {
+    acts.innerHTML = '<button class="ghost yes" type="button">Delete it</button><button class="ghost no" type="button">Keep</button>';
+    acts.querySelector(".no").addEventListener("click", reset);
+    acts.querySelector(".yes").addEventListener("click", async () => {
+      acts.querySelector(".yes").disabled = true; acts.querySelector(".yes").textContent = "Deleting…";
+      try {
+        await api("delete_log", { log_id: l.id });
+        hist.rows = hist.rows.filter(x => x !== l); hist.total = Math.max(0, hist.total - 1);
+        dashStudents = null;
+        drawHistory();
+        $("histNote").textContent = `Deleted ${it.label} (${l.score} BPM) for ${nameOf(l.student_id)}.`;
+      } catch (e) { reset(); $("histNote").textContent = errText(e); }
+    });
+  };
+  acts.firstChild.addEventListener("click", ask);
+  return el;
+}
+
+/* ---------- boot ---------- */
+async function enter(pw){
+  $("loginErr").textContent = ""; $("enter").disabled = true; $("enter").textContent = "Checking…";
+  try {
+    const b = await api("bootstrap", {}, pw);
+    PW = pw; store.set("mm_pw", pw);
+    students = b.students; items = b.items; calendars = b.calendars || [];
+    itemById = new Map(items.map(i => [i.id, i]));
+    buildIndex();
+    $("login").hidden = true; $("app").hidden = false; document.body.classList.add("in");
+    $("classDate").value = localISO(new Date());
+    if (!rows.length) addRow();
+    drawCalRows();
+    if (!calendars.length) $("settings").hidden = false;
+    fillHistStudents();
+    showView();
+    loadToday();
+  } catch (e) {
+    $("loginErr").textContent = errText(e);
+    if (e && e.code === "wrong_password") store.del("mm_pw");
+  }
+  $("enter").disabled = false; $("enter").textContent = "Enter";
+}
+
+$("loginForm").addEventListener("submit", ev => { ev.preventDefault(); const v = $("pw").value; if (v) enter(v); });
+$("lock").addEventListener("click", () => { store.del("mm_pw"); location.reload(); });
+$("refreshBtn").addEventListener("click", () => { if (PW) loadToday(true); });
+setInterval(() => { if (PW && !document.hidden) loadToday(true); }, 2 * 60 * 1000);
+$("calBtn").addEventListener("click", () => { $("settings").hidden = !$("settings").hidden; });
+document.addEventListener("visibilitychange", () => { if (!document.hidden && PW) { const t = localISO(new Date()); if ($("classDate").dataset.auto !== "0" && $("classDate").value !== t) { $("classDate").value = t; } loadToday(true); } });
+window.addEventListener("hashchange", () => { if (PW) showView(); });
+$("dashFilter").addEventListener("input", () => dashStudents && drawStudentList());
+$("dashFilter").addEventListener("keydown", ev => {
+  if (ev.key === "ArrowDown") { ev.preventDefault(); moveDash(1); }
+  else if (ev.key === "ArrowUp") { ev.preventDefault(); moveDash(-1); }
+  else if (ev.key === "Enter") { ev.preventDefault(); const el = document.querySelectorAll("#studentList .srow")[Math.max(dashActive, 0)]; if (el && (dashActive >= 0 || $("dashFilter").value.trim())) el.click(); }
+});
+$("whoProgress").addEventListener("click", ev => { ev.preventDefault(); if (student && student.id) openProgress(student.id, student.name); });
+$("brand").addEventListener("click", ev => { ev.preventDefault(); location.hash = "log"; location.reload(); });
+$("dashBack").addEventListener("click", closeStudent);
+document.querySelector('.tabs a[data-view="dashboard"]').addEventListener("click", () => { if (dashOpen) closeStudent(); });
+$("histStudent").addEventListener("change", () => loadHistory());
+$("histMore").addEventListener("click", () => loadHistory(true));
+$("addRow").addEventListener("click", () => focusRow(addRow()));
+$("save").addEventListener("click", save);
+$("pasteToggle").addEventListener("click", () => { $("pasteBox").hidden = !$("pasteBox").hidden; if (!$("pasteBox").hidden) $("pasteText").focus(); });
+$("pasteApply").addEventListener("click", applyPaste);
+$("classDate").addEventListener("change", () => { $("classDate").dataset.auto = "0"; loadToday(); loadDayLogs(); });
+
+combo($("studentInput"), $("studentMenu"),
+  v => { const n = norm(v); const hits = students.filter(s => !n || norm(s.name).includes(n)).slice(0, 8); if (n && !students.some(s => norm(s.name) === n)) hits.push({ id: null, name: v.trim(), isNew: true }); return hits; },
+  (d, s) => { d.innerHTML = `<span class="nm"></span>`; d.firstChild.textContent = s.isNew ? `Add “${s.name}” as a new student` : s.name; },
+  s => { const v = $("studentInput").value; if (!s) s = matchStudent(v) && norm(matchStudent(v).name) === norm(v) ? matchStudent(v) : (v.trim() ? { id: null, name: v.trim(), isNew: true } : null); if (!s) return; pickStudent(s.isNew ? null : s, s.name); focusRow(rows[0]); });
+
+{ const saved = store.get("mm_pw"); if (saved) { $("pw").value = saved; enter(saved); } }
+})();
+</script>
+</body>
+</html>
