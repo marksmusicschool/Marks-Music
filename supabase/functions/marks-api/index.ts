@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
         if (!Number.isInteger(id)) return reply({ error: "bad_student" }, 400);
         if (!/^\d{4}-\d{2}-\d{2}$/.test(String(body.date))) return reply({ error: "bad_date" }, 400);
         const rows = await sql`select id, item_id, score from public.student_logs
-                               where student_id = ${id} and created_at::date = ${body.date}::date order by id`;
+                               where student_id = ${id} and mm.ist_date(created_at) = ${body.date}::date order by id`;
         return reply({ logs: rows.map((r) => ({ id: Number(r.id), item_id: Number(r.item_id), score: Number(r.score) })) });
       }
 
@@ -94,7 +94,9 @@ Deno.serve(async (req) => {
           .map((e: any) => ({ item_id: Number(e.item_id), score: Number(e.score) }))
           .filter((e: any) => Number.isInteger(e.item_id) && Number.isFinite(e.score) && e.score > 0);
         if (!entries.length) return reply({ error: "no_entries" }, 400);
-        const [r] = await sql`select mm.log_class(${pw}::text, ${sid}::int, ${String(body.student_name ?? "")}::text, ${body.date}::date, ${sql.json(entries)}::jsonb) as r`;
+        // When the class happened; the database falls back to the student's usual time if this is missing.
+        const at = body.at == null || isNaN(+new Date(String(body.at))) ? null : new Date(String(body.at)).toISOString();
+        const [r] = await sql`select mm.log_class(${pw}::text, ${sid}::int, ${String(body.student_name ?? "")}::text, ${body.date}::date, ${sql.json(entries)}::jsonb, ${at}::timestamptz) as r`;
         return reply(r.r);
       }
 

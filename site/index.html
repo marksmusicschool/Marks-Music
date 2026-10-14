@@ -337,6 +337,7 @@ const $ = id => document.getElementById(id);
 let PW = null, calendars = [];
 let students = [], items = [], itemById = new Map();
 let student = null;            // {id|null, name}
+let classAt = null;            // start of the calendar class being logged (ISO), if picked from a class chip
 let bests = new Map();         // item_id -> {best,last,last_date}
 let rows = [];                 // {key, item, bpm}
 let rowSeq = 0;
@@ -384,7 +385,7 @@ function codesFor(it){
   const n = it.name.toLowerCase().trim(), out = [];
   let m;
   if ((m = n.match(/^finger planting - (\d+)\w* fret$/))) out.push("FPE" + m[1]);
-  else if (n === "alternative picking") out.push("APE", "AP");
+  else if (n === "alternate picking exercise" || n === "alternative picking") out.push("APE", "AP");
   else if (n === "warm up") out.push("WU");
   else if ((m = n.match(/^open string - (major|minor) scale - ([a-g])$/))) { const K = m[2].toUpperCase(); out.push(...(m[1] === "major" ? [K + " Scale", K + " Maj Scale"] : [K + "m Scale", K + " Minor Scale"])); }
   else if (n === "major scale pattern") out.push("MajSP");
@@ -576,7 +577,9 @@ async function save(){
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { setStatus("Pick a class date.", "bad"); return; }
   $("save").disabled = true; setStatus("Saving…");
   try {
-    const r = await api("log", { student_id: student.id ? Number(student.id) : null, student_name: student.name, date, entries });
+    // Class time: the calendar class's start, or now when logging today; otherwise the server uses the student's usual time.
+    const at = classAt && localISO(new Date(classAt)) === date ? classAt : date === localISO(new Date()) ? new Date().toISOString() : null;
+    const r = await api("log", { student_id: student.id ? Number(student.id) : null, student_name: student.name, date, entries, at });
     saveNote = [r.created_student && "Added as a new student", r.inserted && `${r.inserted} saved`, r.updated && `${r.updated} raised to a higher score`, r.kept && `${r.kept} already had a higher score that day`].filter(Boolean).join(" · ");
     savedMarks = new Map(entries.map(e => { const b = bests.get(e.item_id); return [e.item_id, !b ? "first" : e.score > b.best ? "new best" : ""]; }));
     if (r.created_student) { students.push({ id: r.student_id, name: student.name }); fillHistStudents(); }
@@ -653,7 +656,7 @@ async function loadToday(quiet = false){
     for (const e of evs) {
       const { c, known, name } = classChip(e);
       if (!known) { const u = document.createElement("span"); u.className = "unknown"; u.textContent = "new"; c.appendChild(u); }
-      c.addEventListener("click", () => { pickStudent(known, name); focusRow(rows[0]); });
+      c.addEventListener("click", () => { classAt = e.start; pickStudent(known, name); focusRow(rows[0]); });
       box.appendChild(c);
     }
     if (student) document.querySelectorAll("#today .chip").forEach(c => c.setAttribute("aria-pressed", String(norm(c.dataset.name) === norm(student.name))));
@@ -951,12 +954,12 @@ $("addRow").addEventListener("click", () => focusRow(addRow()));
 $("save").addEventListener("click", save);
 $("pasteToggle").addEventListener("click", () => { $("pasteBox").hidden = !$("pasteBox").hidden; if (!$("pasteBox").hidden) $("pasteText").focus(); });
 $("pasteApply").addEventListener("click", applyPaste);
-$("classDate").addEventListener("change", () => { $("classDate").dataset.auto = "0"; loadToday(); loadDayLogs(); });
+$("classDate").addEventListener("change", () => { $("classDate").dataset.auto = "0"; classAt = null; loadToday(); loadDayLogs(); });
 
 combo($("studentInput"), $("studentMenu"),
   v => { const n = norm(v); const hits = students.filter(s => !n || norm(s.name).includes(n)).slice(0, 8); if (n && !students.some(s => norm(s.name) === n)) hits.push({ id: null, name: v.trim(), isNew: true }); return hits; },
   (d, s) => { d.innerHTML = `<span class="nm"></span>`; d.firstChild.textContent = s.isNew ? `Add “${s.name}” as a new student` : s.name; },
-  s => { const v = $("studentInput").value; if (!s) s = matchStudent(v) && norm(matchStudent(v).name) === norm(v) ? matchStudent(v) : (v.trim() ? { id: null, name: v.trim(), isNew: true } : null); if (!s) return; pickStudent(s.isNew ? null : s, s.name); focusRow(rows[0]); });
+  s => { const v = $("studentInput").value; if (!s) s = matchStudent(v) && norm(matchStudent(v).name) === norm(v) ? matchStudent(v) : (v.trim() ? { id: null, name: v.trim(), isNew: true } : null); if (!s) return; classAt = null; pickStudent(s.isNew ? null : s, s.name); focusRow(rows[0]); });
 
 { const saved = store.get("mm_pw"); if (saved) { $("pw").value = saved; enter(saved); } }
 })();
