@@ -64,6 +64,7 @@
 const API = "https://jfylfmdzkfaprqmcoxwx.supabase.co/functions/v1/student-portal";
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "marks_music_student_session";
+const tidy = value => String(value || "").replace(/\b\w/g, character => character.toUpperCase());
 let session = null, student = null, items = [], logs = [];
 const itemById = new Map();
 function saveSession(){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(session)); } catch {} }
@@ -162,7 +163,7 @@ function drawProgress(){
     for (const row of group){
       const entry = document.createElement("div"); entry.className = "prog";
       const name = document.createElement("div"); name.className = "nm";
-      const title = document.createElement("b"); title.textContent = row.item.name;
+      const title = document.createElement("b"); title.textContent = tidy(row.item.name);
       const detail = document.createElement("small"); const last = row.points[row.points.length - 1];
       detail.textContent = `${row.points.length}× · last ${dateLabel(last.date, { day: "numeric", month: "short" })}`;
       name.append(title, detail);
