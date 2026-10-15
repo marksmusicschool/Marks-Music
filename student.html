@@ -126,7 +126,7 @@ function spark(points){
 }
 function dateLabel(date, options = { day: "numeric", month: "short", year: "numeric" }){
   const value = date instanceof Date ? date.toISOString() : String(date ?? "");
-  const isoDay = value.match(/^(\\d{4}-\\d{2}-\\d{2})/);
+  const isoDay = value.match(/^(\d{4}-\d{2}-\d{2})/);
   const parsed = isoDay ? new Date(`${isoDay[1]}T00:00:00`) : new Date(value);
   return Number.isNaN(parsed.getTime()) ? "" : parsed.toLocaleDateString(undefined, options);
 }
