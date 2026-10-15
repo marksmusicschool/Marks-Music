@@ -314,7 +314,7 @@ body.in .strings{display:none}
       </div>
       <div id="dashDetail" hidden>
         <button id="dashBack" class="ghost back" type="button">← All students</button>
-        <div class="who"><h2 id="dName"></h2><div id="dMeta" class="meta"></div></div>
+        <div class="who"><h2 id="dName"></h2></div>
         <div id="dBody"></div>
       </div>
     </div>
@@ -806,7 +806,6 @@ async function openStudent(st){
   dashOpen = st.id;
   $("dashList").hidden = true; $("dashDetail").hidden = false; window.scrollTo(0, 0);
   $("dName").textContent = st.name;
-  $("dMeta").textContent = st.first_class ? `Logging since ${fmtDay(st.first_class, { month: "short", year: "numeric" })}` : "No classes logged yet";
   $("dBody").innerHTML = '<p class="note"><span class="pulse"></span>Loading progress…</p>';
   try {
     const logs = (await api("student_history", { student_id: st.id })).logs || [];
