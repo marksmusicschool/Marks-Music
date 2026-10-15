@@ -124,7 +124,12 @@ function spark(points){
   const [x, y] = coords[coords.length - 1], dot = document.createElementNS(svgNS, "circle"); dot.setAttribute("cx", String(x)); dot.setAttribute("cy", String(y)); dot.setAttribute("r", "2.6"); svg.appendChild(dot);
   return svg;
 }
-function dateLabel(date, options = { day: "numeric", month: "short", year: "numeric" }){ return new Date(`${date}T00:00:00`).toLocaleDateString(undefined, options); }
+function dateLabel(date, options = { day: "numeric", month: "short", year: "numeric" }){
+  const value = date instanceof Date ? date.toISOString() : String(date ?? "");
+  const isoDay = value.match(/^(\\d{4}-\\d{2}-\\d{2})/);
+  const parsed = isoDay ? new Date(`${isoDay[1]}T00:00:00`) : new Date(value);
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toLocaleDateString(undefined, options);
+}
 function drawProgress(){
   const byItem = new Map();
   for (const log of logs){ const id = Number(log.item_id); if (!byItem.has(id)) byItem.set(id, []); byItem.get(id).push(log); }
