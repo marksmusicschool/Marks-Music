@@ -1,0 +1,9 @@
+project_id = "jfylfmdzkfaprqmcoxwx"
+
+# Both functions perform their own request authorization. Student sign-in begins
+# with a username/password exchange, so the gateway cannot require a JWT first.
+[functions.marks-api]
+verify_jwt = false
+
+[functions.student-portal]
+verify_jwt = false

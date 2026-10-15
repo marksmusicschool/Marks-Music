@@ -199,6 +199,10 @@ select.field{width:100%;appearance:none;-webkit-appearance:none;background-image
 .srow[aria-selected="true"]{background:var(--brass-soft)}
 .done .when{font:500 12px var(--body);color:var(--muted)}
 body.in .strings{display:none}
+.account-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
+.account-row strong{display:block;font-weight:500}
+.account-row small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+#view-access a{color:var(--brass)}
 </style>
 
 </head>
@@ -209,12 +213,13 @@ body.in .strings{display:none}
   <!-- LOGIN -->
   <div id="login">
     <h1 class="wordmark">Marks<br><em>Music</em></h1>
-    <p class="sub">Class log for Aaron Mark's guitar students. Enter the password to start logging.</p>
+    <p class="sub">Teacher access for Aaron Mark's guitar log.</p>
     <form id="loginForm" class="pwrow" autocomplete="off">
       <input id="pw" class="field" type="password" placeholder="Password" aria-label="Password" autofocus>
       <button id="enter" class="btn" type="submit">Enter</button>
     </form>
     <p id="loginErr" class="err" role="alert"></p>
+    <p class="note">Student? <a href="student.html">Sign in to view your progress</a>.</p>
   </div>
 
   <!-- APP -->
@@ -225,6 +230,7 @@ body.in .strings{display:none}
         <a href="#log" data-view="log">Log</a>
         <a href="#dashboard" data-view="dashboard">Dashboard</a>
         <a href="#history" data-view="history">Log History</a>
+        <a href="#access" data-view="access">Student Access</a>
       </nav>
       <button id="lock" class="ghost lock" type="button">Lock</button>
     </header>
@@ -324,6 +330,23 @@ body.in .strings{display:none}
         <p id="histNote" class="note" role="status"></p>
       </section>
     </div>
+
+    <!-- STUDENT ACCESS -->
+    <div id="view-access" class="view" hidden>
+      <section>
+        <div class="pagehead"><h2 class="pagetitle">Student logins</h2><span id="accountCount" class="note"></span></div>
+        <p class="note">Create a login for each student or reset one if they forget their password. Their full name is their username. A new temporary password is shown only once, and the student must change it when they sign in.</p>
+        <p id="accountNote" class="note" role="status"></p>
+        <div id="credentialBox" class="done" hidden>
+          <h3>Temporary login</h3>
+          <p id="credentialUsername"></p>
+          <p><strong id="credentialPassword" class="mono"></strong></p>
+          <button id="copyCredential" class="btn" type="button">Copy temporary password</button>
+          <p class="note">Share this privately with the student. It cannot be viewed again; reset it if it is lost.</p>
+        </div>
+        <div id="accountsList" class="list"></div>
+      </section>
+    </div>
   </div>
 </main>
 
@@ -331,6 +354,7 @@ body.in .strings{display:none}
 (() => {
 "use strict";
 const API = "https://jfylfmdzkfaprqmcoxwx.supabase.co/functions/v1/marks-api";
+const STUDENT_API = "https://jfylfmdzkfaprqmcoxwx.supabase.co/functions/v1/student-portal";
 const TYPES = ["Personal", "Offline", "Swaralaya"];
 const $ = id => document.getElementById(id);
 
@@ -696,7 +720,7 @@ function drawCalRows(){
 }
 
 /* ---------- pages ---------- */
-const VIEWS = ["log", "dashboard", "history"];
+const VIEWS = ["log", "dashboard", "history", "access"];
 let dashStudents = null, dashOpen = null;      // cached Dashboard list, open student id
 let hist = { sid: "", rows: [], total: 0 };
 const fmtDay = (d, opts = { weekday: "short", day: "numeric", month: "short", year: "numeric" }) => new Date(d + "T00:00:00").toLocaleDateString(undefined, opts);
@@ -709,6 +733,7 @@ function showView(){
   document.querySelectorAll(".tabs a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
   if (v === "dashboard") loadDashboard();
   if (v === "history") loadHistory();
+  if (v === "access") loadStudentAccounts();
   window.scrollTo(0, 0);
 }
 
@@ -906,6 +931,67 @@ function histRow(l){
   acts.firstChild.addEventListener("click", ask);
   return el;
 }
+
+/* ---------- student access management ---------- */
+async function studentAdminApi(action, data = {}){
+  let res;
+  try {
+    res = await fetch(STUDENT_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, pw: PW, ...data }) });
+  } catch { throw { code: "offline" }; }
+  let body = {};
+  try { body = await res.json(); } catch {}
+  if (!res.ok) throw { code: body.error || "server_error", status: res.status };
+  return body;
+}
+async function loadStudentAccounts(){
+  const box = $("accountsList");
+  box.innerHTML = '<p class="note"><span class="pulse"></span>Loading student accounts…</p>';
+  $("accountNote").textContent = "";
+  try {
+    const result = await studentAdminApi("admin_student_accounts");
+    drawStudentAccounts(result.students || []);
+  } catch (e) {
+    box.innerHTML = "";
+    $("accountNote").textContent = errText(e);
+  }
+}
+function drawStudentAccounts(list){
+  const box = $("accountsList"); box.innerHTML = "";
+  $("accountCount").textContent = `${list.length} students`;
+  for (const student of list){
+    const row = document.createElement("div"); row.className = "account-row";
+    const info = document.createElement("div");
+    const name = document.createElement("strong"); name.textContent = student.name;
+    const status = document.createElement("small");
+    status.textContent = student.has_login ? (student.must_change_password ? "Login set · temporary password still needs changing" : "Login set") : "No login yet";
+    info.append(name, status);
+    const button = document.createElement("button"); button.type = "button"; button.className = "ghost";
+    button.textContent = student.has_login ? "Reset password" : "Create login";
+    button.addEventListener("click", async () => {
+      if (student.has_login && !window.confirm(`Reset ${student.name}'s password? They will need the new password the next time they sign in.`)) return;
+      button.disabled = true; button.textContent = student.has_login ? "Resetting…" : "Creating…";
+      $("accountNote").textContent = ""; $("credentialBox").hidden = true;
+      try {
+        const credential = await studentAdminApi("admin_reset_student_password", { student_id: student.id });
+        $("credentialUsername").textContent = `Username: ${credential.username}`;
+        $("credentialPassword").textContent = credential.temporary_password;
+        $("copyCredential").textContent = "Copy temporary password";
+        $("credentialBox").hidden = false;
+        await loadStudentAccounts();
+        $("accountNote").textContent = "Login ready. Copy the temporary password and share it privately.";
+      } catch (e) {
+        $("accountNote").textContent = errText(e);
+        button.disabled = false; button.textContent = student.has_login ? "Reset password" : "Create login";
+      }
+    });
+    row.append(info, button); box.appendChild(row);
+  }
+}
+$("copyCredential").addEventListener("click", async () => {
+  const button = $("copyCredential");
+  try { await navigator.clipboard.writeText($("credentialPassword").textContent); button.textContent = "Copied"; }
+  catch { button.textContent = "Copy unavailable — select the password above"; }
+});
 
 /* ---------- boot ---------- */
 async function enter(pw){
