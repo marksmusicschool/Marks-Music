@@ -44,7 +44,6 @@
       <section id="progressPage">
         <div class="pagehead"><h1 id="studentName" class="title"></h1></div>
         <p id="progressNote" class="meta"></p>
-        <div id="stats" class="stats"></div>
         <div id="progress"></div>
       </section>
     </div>
@@ -131,10 +130,7 @@ function dateLabel(date, options = { day: "numeric", month: "short", year: "nume
 function drawProgress(){
   const byItem = new Map();
   for (const log of logs){ const id = Number(log.item_id); if (!byItem.has(id)) byItem.set(id, []); byItem.get(id).push(log); }
-  const days = new Set(logs.map(log => log.date));
   const rows = [...byItem].map(([id, points]) => ({ item: itemById.get(id) || { name: `Exercise ${id}`, cat: "Other", order: 1e9 }, points, best: Math.max(...points.map(p => Number(p.score))) }));
-  const improved = rows.filter(row => row.best > Number(row.points[0].score)).length;
-  $("stats").replaceChildren(stat(days.size, "classes"), stat(rows.length, "exercises"), stat(improved, "improved"));
   const root = $("progress"); root.innerHTML = "";
   if (!rows.length){ root.innerHTML = '<p class="empty">Your progress will appear here after your first class is logged.</p>'; return; }
   rows.sort((a, b) => Number(a.item.order ?? 1e9) - Number(b.item.order ?? 1e9));
@@ -159,7 +155,6 @@ function drawProgress(){
     root.appendChild(section);
   }
 }
-function stat(value, label){ const box = document.createElement("div"); box.className = "stat"; const number = document.createElement("b"); number.textContent = String(value); const text = document.createElement("span"); text.textContent = label; box.append(number, text); return box; }
 $("loginForm").addEventListener("submit", async event => {
   event.preventDefault(); const button = $("loginButton");
   button.disabled = true; button.textContent = "Signing in…"; $("loginError").textContent = "";
