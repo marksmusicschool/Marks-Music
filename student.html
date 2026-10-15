@@ -30,10 +30,6 @@
 
   <section id="app" hidden>
     <header class="top"><div class="brand">Marks <em>Music</em></div><button id="logout" class="ghost" type="button">Sign out</button></header>
-    <nav class="tabs" aria-label="Student pages">
-      <button type="button" data-page="progress" aria-selected="true">Progress</button>
-      <button type="button" data-page="history" aria-selected="false">Log history</button>
-    </nav>
     <div id="passwordChange" class="change" hidden>
       <h2>Choose a new password</h2>
       <p class="note">This is a temporary password. Choose a private password with at least 12 characters. Your teacher can reset it if you forget it.</p>
@@ -50,10 +46,6 @@
         <p id="progressNote" class="meta"></p>
         <div id="stats" class="stats"></div>
         <div id="progress"></div>
-      </section>
-      <section id="historyPage" class="history" hidden>
-        <div class="pagehead"><h1 class="title">Log history</h1><span id="historyCount" class="note"></span></div>
-        <div id="history"></div>
       </section>
     </div>
   </section>
@@ -104,23 +96,14 @@ function showLogin(message = ""){
   $("app").hidden = true; $("login").hidden = false; $("loginError").textContent = message;
 }
 function showApp(){ $("login").hidden = true; $("app").hidden = false; }
-function setPage(page){
-  const isHistory = page === "history";
-  $("progressPage").hidden = isHistory;
-  $("historyPage").hidden = !isHistory;
-  document.querySelectorAll(".tabs button").forEach(button => button.setAttribute("aria-selected", String(button.dataset.page === page)));
-  if (location.hash !== `#${page}`) history.replaceState(null, "", `#${page}`);
-}
 async function loadPortal(){
   const [base, historyData] = await Promise.all([api("student_bootstrap"), api("student_history")]);
   student = base.student; items = base.items || []; logs = historyData.logs || [];
   items.forEach(item => itemById.set(Number(item.id), item));
   $("studentName").textContent = student.name;
   $("progressNote").textContent = logs.length ? "Your progress from every saved class." : "No class scores have been saved yet.";
-  drawProgress(); drawHistory();
+  drawProgress();
   $("passwordChange").hidden = true; $("studentPages").hidden = false;
-  const page = location.hash === "#history" ? "history" : "progress";
-  setPage(page);
 }
 async function openSession(data){
   session = data; saveSession();
@@ -177,24 +160,6 @@ function drawProgress(){
   }
 }
 function stat(value, label){ const box = document.createElement("div"); box.className = "stat"; const number = document.createElement("b"); number.textContent = String(value); const text = document.createElement("span"); text.textContent = label; box.append(number, text); return box; }
-function drawHistory(){
-  const box = $("history"); box.innerHTML = "";
-  const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date) || Number(b.id) - Number(a.id));
-  $("historyCount").textContent = `${sorted.length} log${sorted.length === 1 ? "" : "s"}`;
-  if (!sorted.length){ box.innerHTML = '<p class="empty">No class logs yet.</p>'; return; }
-  let currentDate = null, day = null;
-  for (const log of sorted){
-    if (log.date !== currentDate){
-      currentDate = log.date; day = document.createElement("div"); day.className = "day";
-      const heading = document.createElement("h3"); heading.textContent = dateLabel(currentDate); day.appendChild(heading); box.appendChild(day);
-    }
-    const entry = document.createElement("div"); entry.className = "entry";
-    const exercise = document.createElement("span"); exercise.className = "exercise";
-    const item = itemById.get(Number(log.item_id)); exercise.textContent = item?.name || `Exercise ${log.item_id}`;
-    const score = document.createElement("span"); score.className = "score"; score.textContent = `${log.score} BPM`;
-    entry.append(exercise, score); day.appendChild(entry);
-  }
-}
 $("loginForm").addEventListener("submit", async event => {
   event.preventDefault(); const button = $("loginButton");
   button.disabled = true; button.textContent = "Signing in…"; $("loginError").textContent = "";
@@ -220,7 +185,6 @@ $("changeForm").addEventListener("submit", async event => {
   } catch (error) { $("changeError").textContent = errorText(error); }
   finally { button.disabled = false; button.textContent = "Save password"; }
 });
-document.querySelectorAll(".tabs button").forEach(button => button.addEventListener("click", () => setPage(button.dataset.page)));
 $("logout").addEventListener("click", async () => {
   try { if (session?.access_token) await api("student_logout"); } catch {}
   clearSession(); showLogin();
