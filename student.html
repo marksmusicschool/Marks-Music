@@ -43,7 +43,6 @@
     <div id="studentPages" hidden>
       <section id="progressPage">
         <div class="pagehead"><h1 id="studentName" class="title"></h1></div>
-        <p id="progressNote" class="meta"></p>
         <div id="progress"></div>
       </section>
     </div>
@@ -100,7 +99,6 @@ async function loadPortal(){
   student = base.student; items = base.items || []; logs = historyData.logs || [];
   items.forEach(item => itemById.set(Number(item.id), item));
   $("studentName").textContent = student.name;
-  $("progressNote").textContent = logs.length ? "Your progress from every saved class." : "No class scores have been saved yet.";
   drawProgress();
   $("passwordChange").hidden = true; $("studentPages").hidden = false;
 }
@@ -162,8 +160,7 @@ $("loginForm").addEventListener("submit", async event => {
     const data = await api("student_login", { username: $("username").value.trim(), password: $("password").value });
     await openSession(data);
   } catch (error) {
-    if (session?.access_token) { showApp(); $("progressNote").textContent = errorText(error); }
-    else showLogin(errorText(error));
+    clearSession(); showLogin(errorText(error));
   }
   finally { button.disabled = false; button.textContent = "Sign in"; }
 });
