@@ -753,7 +753,7 @@ function classChip(e){
   c.type = "button"; c.className = "chip " + e.type; c.dataset.name = known ? known.name : name; c.setAttribute("aria-pressed", "false");
   c.innerHTML = `<span class="mono"></span><span></span><span class="tag"></span>`;
   c.children[0].textContent = allDay ? "All day" : new Date(e.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  setStudentName(c.children[1], known ? known.name : name);
+  c.children[1].textContent = known ? known.name : name;
   c.children[2].textContent = e.type; c.children[2].classList.add(e.type);
   return { c, known, name };
 }
