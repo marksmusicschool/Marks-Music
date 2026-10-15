@@ -90,6 +90,7 @@ section{display:grid;gap:14px;margin-bottom:40px}
 
 .who{display:grid;gap:4px;padding-top:4px}
 .who h2{font:400 clamp(40px,10vw,64px)/1 var(--display);margin:0;text-wrap:balance}
+.student-name .second-name{color:var(--brass);font-size:.84em;font-style:italic}
 .who .meta{color:var(--muted);font-size:13px}
 .newtag{display:inline-block;font-size:12px;color:var(--brass);border:1px solid var(--brass);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle}
 
@@ -485,6 +486,14 @@ function combo(input, menu, source, render, onPick){
 }
 
 /* ---------- students ---------- */
+function setStudentName(element, name){
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  element.replaceChildren();
+  element.classList.add("student-name");
+  if (!parts.length) return;
+  const first = document.createElement("span"); first.className = "first-name"; first.textContent = parts.shift(); element.appendChild(first);
+  if (parts.length) { const second = document.createElement("span"); second.className = "second-name"; second.textContent = " " + parts.join(" "); element.appendChild(second); }
+}
 function matchStudent(name){
   const n = norm(name); if (!n) return null;
   return students.find(s => norm(s.name) === n)
@@ -496,7 +505,7 @@ async function pickStudent(s, typedName){
   student = s ? { id: s.id, name: s.name } : { id: null, name: typedName.trim() };
   $("studentInput").value = student.name;
   $("who").hidden = false;
-  $("whoName").textContent = student.name;
+  setStudentName($("whoName"), student.name);
   document.querySelectorAll("#today .chip").forEach(c => c.setAttribute("aria-pressed", String(norm(c.dataset.name) === norm(student.name))));
   bests = new Map();
   $("whoProgress").hidden = !student.id;
@@ -744,7 +753,7 @@ function classChip(e){
   c.type = "button"; c.className = "chip " + e.type; c.dataset.name = known ? known.name : name; c.setAttribute("aria-pressed", "false");
   c.innerHTML = `<span class="mono"></span><span></span><span class="tag"></span>`;
   c.children[0].textContent = allDay ? "All day" : new Date(e.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  c.children[1].textContent = known ? known.name : name;
+  setStudentName(c.children[1], known ? known.name : name);
   c.children[2].textContent = e.type; c.children[2].classList.add(e.type);
   return { c, known, name };
 }
@@ -806,7 +815,7 @@ function drawStudentList(){
 async function openStudent(st){
   dashOpen = st.id;
   $("dashList").hidden = true; $("dashDetail").hidden = false; window.scrollTo(0, 0);
-  $("dName").textContent = st.name;
+  setStudentName($("dName"), st.name);
   $("dBody").innerHTML = '<p class="note"><span class="pulse"></span>Loading progress…</p>';
   try {
     const logs = (await api("student_history", { student_id: st.id })).logs || [];
