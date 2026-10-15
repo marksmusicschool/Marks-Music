@@ -315,7 +315,6 @@ body.in .strings{display:none}
       <div id="dashDetail" hidden>
         <button id="dashBack" class="ghost back" type="button">← All students</button>
         <div class="who"><h2 id="dName"></h2><div id="dMeta" class="meta"></div></div>
-        <div id="dStats" class="stats"></div>
         <div id="dBody"></div>
       </div>
     </div>
@@ -808,7 +807,7 @@ async function openStudent(st){
   $("dashList").hidden = true; $("dashDetail").hidden = false; window.scrollTo(0, 0);
   $("dName").textContent = st.name;
   $("dMeta").textContent = st.first_class ? `Logging since ${fmtDay(st.first_class, { month: "short", year: "numeric" })}` : "No classes logged yet";
-  $("dStats").innerHTML = ""; $("dBody").innerHTML = '<p class="note"><span class="pulse"></span>Loading progress…</p>';
+  $("dBody").innerHTML = '<p class="note"><span class="pulse"></span>Loading progress…</p>';
   try {
     const logs = (await api("student_history", { student_id: st.id })).logs || [];
     if (dashOpen !== st.id) return;
@@ -825,16 +824,11 @@ function spark(points){
 function drawProgress(st, logs){
   const byItem = new Map();
   for (const l of logs) { if (!byItem.has(l.item_id)) byItem.set(l.item_id, []); byItem.get(l.item_id).push(l); }
-  const days = new Set(logs.map(l => l.date));
-  let raised = 0;
   const rowsOut = [...byItem].map(([id, pts]) => {
     const it = itemById.get(id) || { label: "Exercise " + id, codes: [], cat: "other" };
     const best = Math.max(...pts.map(p => p.score)), first = pts[0].score, last = pts[pts.length - 1];
-    if (best > first) raised++;
     return { it, pts, best, first, last };
   });
-  const stat = (v, t) => `<div class="stat"><b>${v}</b><span>${t}</span></div>`;
-  $("dStats").innerHTML = stat(days.size, "classes") + stat(byItem.size, "exercises") + stat(raised, "improved");
   const body = $("dBody"); body.innerHTML = "";
   if (!rowsOut.length) { body.innerHTML = '<p class="note">No scores logged for this student yet.</p>'; return; }
   const groups = new Map();
