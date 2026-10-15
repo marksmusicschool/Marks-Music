@@ -662,7 +662,8 @@ async function loadToday(quiet = false){
   btn.classList.add("spin");
   if (!quiet) { box.innerHTML = ""; note.innerHTML = '<span class="pulse"></span>Checking the calendar…'; }
   try {
-    const r = await api("today", { start: start.toISOString(), end: end.toISOString() });
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata";
+    const r = await api("today", { start: start.toISOString(), end: end.toISOString(), timezone });
     if (seq !== todaySeq) return;
     // Only classes that have already started show up; later ones appear once their start time passes.
     const now = new Date();
