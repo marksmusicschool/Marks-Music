@@ -166,7 +166,7 @@ header.top{flex-wrap:wrap;row-gap:14px;margin-bottom:28px}
 .stat span{font-size:12px;color:var(--muted)}
 .grp{margin-bottom:30px;display:grid;gap:0}
 .grp .label{padding-bottom:8px;border-bottom:1px solid var(--line)}
-.grp .rhythm-label{margin-top:14px;padding-bottom:6px;font-size:10px}.grp .category-label{font-size:13px;color:var(--brass)}
+.grp .rhythm-label{margin-top:14px;padding-bottom:6px;font-size:10px}.grp .category-label{font-size:13px;color:var(--brass)}.grp .type-label{opacity:.72}.grp .variant-label{margin-top:14px;padding-bottom:6px}
 .prog{display:grid;grid-template-columns:minmax(0,1fr) 104px 64px;gap:12px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line)}
 .prog .nm{min-width:0}
 .prog .nm b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -838,29 +838,40 @@ function drawProgress(st, logs){
     const match = label.match(/(?:^|[\s-])(downstroke|waltz|foxtrot|strumming pattern \d+)$/i);
     return match ? match[1].toLowerCase().replace(/\s+/g, " ") : null;
   };
+  const songStyleFor = it => {
+    const label = String(it.name || it.label || "");
+    const match = label.match(/(?:^|[\s-])(open chords|bar chords)$/i);
+    return match ? match[1].toLowerCase() : null;
+  };
   const pos = it => { const i = items.indexOf(it); return i < 0 ? 1e9 : i; };
   for (const r of rowsOut.sort((a, b) => pos(a.it) - pos(b.it))) {
-    const category = tidy(r.it.cat || "other");
-    const type = tidy(r.it.sub || "General");
+    const rawCategory = String(r.it.cat || "other");
+    const category = tidy(rawCategory);
+    const rawType = String(r.it.sub || "");
+    const type = norm(rawType) === norm(rawCategory) ? "" : tidy(rawType);
     if (!categories.has(category)) categories.set(category, new Map());
     const types = categories.get(category);
     if (!types.has(type)) types.set(type, new Map());
-    const rhythms = types.get(type);
-    const rhythm = rhythmFor(r.it);
-    const key = rhythm ? "rhythm:" + rhythm : "other";
-    if (!rhythms.has(key)) rhythms.set(key, { label: rhythm ? tidy(rhythm) : "", rows: [] });
-    rhythms.get(key).rows.push(r);
+    const variants = types.get(type);
+    const isSongs = norm(rawCategory) === "songs";
+    const variant = isSongs ? songStyleFor(r.it) : rhythmFor(r.it);
+    const key = variant ? (isSongs ? "style:" : "rhythm:") + variant : "other";
+    if (!variants.has(key)) variants.set(key, { label: variant ? tidy(variant) : "", kind: isSongs ? "style" : "rhythm", rows: [] });
+    variants.get(key).rows.push(r);
   }
   for (const [category, types] of categories) {
     const sec = document.createElement("div"); sec.className = "grp";
     const categoryHeading = document.createElement("div"); categoryHeading.className = "label category-label";
     categoryHeading.textContent = category; sec.appendChild(categoryHeading);
     for (const [type, groups] of types) {
-      const typeHeading = document.createElement("div"); typeHeading.className = "label type-label";
-      typeHeading.textContent = type; sec.appendChild(typeHeading);
+      if (type) {
+        const typeHeading = document.createElement("div"); typeHeading.className = "label type-label";
+        typeHeading.textContent = type; sec.appendChild(typeHeading);
+      }
       for (const group of groups.values()) {
         if (group.label) {
-          const heading = document.createElement("div"); heading.className = "label rhythm-label";
+          const heading = document.createElement("div");
+          heading.className = "label " + (group.kind === "style" ? "variant-label" : "rhythm-label");
           heading.textContent = group.label; sec.appendChild(heading);
         }
         for (const r of group.rows) {
