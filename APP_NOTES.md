@@ -84,3 +84,9 @@ These notes are the working map for future changes. Update this file in the same
 - Reduced opacity on the Songs scale/key headings (such as G Major and C Major) and kept Open/Bar Chords headings at full opacity, making the key headings lighter than the chord-style headings.
 - Published source on `main`: `4a754da0504e6609dff6685b7809dc8190a85701`. Deployed app on `gh-pages`: `a15ecc8bc4c2e66114756fbcd7280ef6b265e383`.
 - Verification: confirmed both files use the lighter key heading and full-strength chord heading styles.
+
+## Solid scale-heading color — 2026-10-22
+
+- Replaced transparency on Songs scale/key headings with a fully opaque light color: `--soft-ink` is `#b6b4ae` in light mode and `#dedbd4` in dark mode. Open/Bar Chords headings retain the regular muted gray.
+- Published source on `main`: `6764b5b6ec3f49b3bfffe21a4228ed4e68b57ea5`. Deployed app on `gh-pages`: `cec850ece0f67d894d897cd0628213c636ada18e`.
+- Verification: confirmed the scale heading uses full opacity and the solid theme variable in both files.
