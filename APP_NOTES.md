@@ -150,3 +150,12 @@ These notes are the working map for future changes. Update this file in the same
 - The history preview now fetches additional 200-row pages in the background until it reaches entries at least seven days old or exhausts available history. The history API was checked to return newest-first rows; the preview itself scrolls within a 220px viewport.
 - Deployed admin page on gh-pages: 64e1b12cc7ed1eb928220716ff50d8f54e5aebca (index.html).
 - Verification: fetched the deployed page and confirmed both internal scroll containers and the seven-day pagination condition. No database changes were needed.
+
+
+## Active Students roster, categories, and sorting — 2026-10-23
+
+- The Admin Active Students preview now renders every active student inside its scrollable container; it no longer limits the rendered list to four rows. The button now reads “Show all Students”.
+- The dedicated page is titled “All Students” and shows Active Students first, followed by Deactivated Students. Deactivated records retain the Activate action and existing data.
+- Added a sorting panel for active students: Name (A–Z) or Performance. Performance loads each active student's full log history, ranks by total exercise log entries, then by the sum of logged scores, with name as a final tie-breaker. It uses up to four concurrent history requests and shows the totals with each active student after loading.
+- Published to gh-pages/index.html in commits 77c79cbb95dad69ad0ce94339b6c4c5b4d3479a0 and 0e18abd27b937f2c7a80d91a7792f8ae7a8ef23e.
+- Verification: fetched the deployed page and confirmed all active rows are rendered into the scrollable preview, the updated label and categories, sort selector and history-based ranking, plus the Activate action. No database or student data changes were made.
