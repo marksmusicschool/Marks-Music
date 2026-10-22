@@ -1085,7 +1085,7 @@ function drawStudentAccounts(list, boxId = "accountsList"){
       try { const c = await studentAdminApi("admin_reset_student_password", { student_id: student.id }); showAdminPage("home"); $("credentialUsername").textContent = `Username: ${c.username}`; $("credentialPassword").textContent = c.temporary_password; $("credentialBox").hidden = false; await loadStudentAccounts(); $("accountNote").textContent = "Login ready. Copy the temporary password and share it privately."; }
       catch (e) { $("accountNote").textContent = errText(e); login.disabled = false; }
     });
-    const toggle = document.createElement("button"); toggle.type = "button"; toggle.className = "ghost"; toggle.textContent = student.active ? "Deactivate" : "Reactivate";
+    const toggle = document.createElement("button"); toggle.type = "button"; toggle.className = "ghost"; toggle.textContent = student.active ? "Deactivate" : "Activate";
     toggle.addEventListener("click", async () => {
       const active = !student.active;
       if (!active && !confirm(`Deactivate ${student.name}? Their data is preserved, but they will be removed from active lists and cannot sign in.`)) return;
