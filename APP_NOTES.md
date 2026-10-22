@@ -126,3 +126,10 @@ These notes are the working map for future changes. Update this file in the same
 - Applied to admin source `site/index.html` and deployed admin page `gh-pages/index.html`.
 - Commits: main `1a209a1199697fe542f9bc83c1a8eabee800b663`; gh-pages `ff7c23ca800069ed3c93f2d948a23b96a9cefcfb`.
 - Verification: confirmed Progress selection awaits Log data loading; the Log selection path still starts Progress history preload.
+
+## Log History moved into Admin — 2026-10-23
+
+- Removed Log History from the top-level tabs and placed its filter, entries, pagination, and status inside Admin below student access management.
+- Opening Admin loads both student account controls and Log History.
+- Deployed on `gh-pages`: `1ceb1a5f11a7dbe1eb273ca384f6f59c97d75a55`.
+- Verification: confirmed no standalone history view/tab remains in the deployed admin page and the history controls are inside Admin.
