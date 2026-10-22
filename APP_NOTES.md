@@ -50,3 +50,13 @@ These notes are the working map for future changes. Update this file in the same
 
 - 2026-10-22: Initial source/live-system review. Confirmed repository and project identity, read app/install docs and the complete static app/backend/calendar source, inspected live project metadata, public table structure, migration history, and live Edge Function inventory. No production data or configuration was changed. Created this baseline map.
 - 2026-10-22: Student brand and install metadata. `gh-pages/student.html` now points to the shared Marks Music favicon and Apple touch icon, and to a student-specific PWA manifest that reuses the admin artwork but launches `student.html`. Existing wordmark styling was already consistent. Updated `APP_NOTES.md` to capture the branch/source layout and install behavior. Verified both student page metadata and manifest after the GitHub commits; existing installed devices may need to refresh or re-add the app to refresh a cached icon.
+
+## Progress preload and exercise grouping — 2026-10-22
+
+- Selecting a saved student on Log starts fetching their full progress history in the background, alongside the existing best-score request.
+- Progress details reuse that in-memory history immediately when opened. Students first opened from the Progress list fetch once, then also use the cache on later visits.
+- Saving a class forces a fresh history request for the saved student. Version tracking prevents an older in-flight request from overwriting that refreshed cache.
+- Progress rows are ordered by the existing exercise catalogue and nested by catalogue category, catalogue subcategory (exercise type), then rhythm variant. Entries without a rhythm stay under their type without a rhythm heading.
+- The cache lives in page memory only; it is rebuilt when the page is reloaded. No database schema or Edge Function changes were needed.
+- Published source update on `main`: `d8343407fedde8ffc6e92c2e9d0d103e03840f71` (`site/index.html`). Deployed student/admin page on `gh-pages`: `f5d0fe42b747d5b166b21ad18ecf3a310f172e51` (`index.html`).
+- Verification: fetched both committed files and confirmed the preload hooks, refresh after save, nested type/rhythm grouping, and cache version guard are present. Runtime browser interaction was not exercised in this change.
