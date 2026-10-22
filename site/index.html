@@ -166,6 +166,7 @@ header.top{flex-wrap:wrap;row-gap:14px;margin-bottom:28px}
 .stat span{font-size:12px;color:var(--muted)}
 .grp{margin-bottom:30px;display:grid;gap:0}
 .grp .label{padding-bottom:8px;border-bottom:1px solid var(--line)}
+.grp .rhythm-label{margin-top:14px;padding-bottom:6px;font-size:10px}
 .prog{display:grid;grid-template-columns:minmax(0,1fr) 104px 64px;gap:12px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line)}
 .prog .nm{min-width:0}
 .prog .nm b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -223,7 +224,7 @@ body.in .strings{display:none}
       <a id="brand" class="brand" href="#log" title="Back to the start">Marks <em>Music</em></a>
       <nav class="tabs" aria-label="Pages">
         <a href="#log" data-view="log">Log</a>
-        <a href="#dashboard" data-view="dashboard">Dashboard</a>
+        <a href="#dashboard" data-view="dashboard">Progress</a>
         <a href="#history" data-view="history">Log History</a>
       </nav>
       <button id="lock" class="ghost lock" type="button">Lock</button>
@@ -704,7 +705,7 @@ function showView(){
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "log";
   for (const k of VIEWS) $("view-" + k).hidden = k !== v;
   document.querySelectorAll(".tabs a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
-  if (v === "dashboard") loadDashboard();
+  if (v === "dashboard") { if (student && student.id) openProgress(student.id, student.name); else if (!dashOpen) loadDashboard(); }
   if (v === "history") loadHistory();
   window.scrollTo(0, 0);
 }
@@ -809,28 +810,43 @@ function drawProgress(st, logs){
   $("dStats").innerHTML = stat(days.size, "classes") + stat(byItem.size, "exercises") + stat(raised, "improved");
   const body = $("dBody"); body.innerHTML = "";
   if (!rowsOut.length) { body.innerHTML = '<p class="note">No scores logged for this student yet.</p>'; return; }
-  const groups = new Map();
+  const categories = new Map();
+  const rhythmFor = it => {
+    const label = String(it.name || it.label || "");
+    const match = label.match(/(?:^|[\\s-])(downstroke|waltz|foxtrot|strumming pattern \\d+)$/i);
+    return match ? match[1].toLowerCase().replace(/\\s+/g, " ") : null;
+  };
   const pos = it => { const i = items.indexOf(it); return i < 0 ? 1e9 : i; };
   for (const r of rowsOut.sort((a, b) => pos(a.it) - pos(b.it))) {
-    const g = tidy(r.it.cat || "other");
-    if (!groups.has(g)) groups.set(g, []);
-    groups.get(g).push(r);
+    const category = tidy(r.it.cat || "other");
+    if (!categories.has(category)) categories.set(category, new Map());
+    const groups = categories.get(category);
+    const rhythm = rhythmFor(r.it);
+    const key = rhythm ? "rhythm:" + rhythm : "other";
+    if (!groups.has(key)) groups.set(key, { label: rhythm ? tidy(rhythm) : "", rows: [] });
+    groups.get(key).rows.push(r);
   }
-  for (const [g, list] of groups) {
+  for (const [category, groups] of categories) {
     const sec = document.createElement("div"); sec.className = "grp";
-    sec.innerHTML = '<div class="label"></div>'; sec.firstChild.textContent = g;
-    for (const r of list) {
-      const el = document.createElement("div"); el.className = "prog";
-      const gain = r.best - r.first;
-      el.innerHTML = `<div class="nm"><b></b><small><span class="code"></span><span class="when"></span></small></div>${spark(r.pts)}<div class="sc"><b></b><small></small></div>`;
-      el.querySelector("b").textContent = r.it.label;
-      el.querySelector(".code").textContent = codeOf(r.it);
-      el.querySelector(".when").textContent = `${r.pts.length}× · last ${fmtDay(r.last.date, { day: "numeric", month: "short" })} at ${r.last.score}`;
-      el.querySelector(".sc b").textContent = r.best;
-      const sm = el.querySelector(".sc small");
-      sm.textContent = gain > 0 ? `+${gain} BPM` : "best BPM"; if (gain > 0) sm.className = "up";
-      el.title = r.pts.map(p => `${fmtDay(p.date, { day: "numeric", month: "short" })}: ${p.score}`).join("\n");
-      sec.appendChild(el);
+    sec.innerHTML = '<div class="label"></div>'; sec.firstChild.textContent = category;
+    for (const group of groups.values()) {
+      if (group.label) {
+        const heading = document.createElement("div"); heading.className = "label rhythm-label";
+        heading.textContent = group.label; sec.appendChild(heading);
+      }
+      for (const r of group.rows) {
+        const el = document.createElement("div"); el.className = "prog";
+        const gain = r.best - r.first;
+        el.innerHTML = `<div class="nm"><b></b><small><span class="code"></span><span class="when"></span></small></div>${spark(r.pts)}<div class="sc"><b></b><small></small></div>`;
+        el.querySelector("b").textContent = r.it.label;
+        el.querySelector(".code").textContent = codeOf(r.it);
+        el.querySelector(".when").textContent = `${r.pts.length}× · last ${fmtDay(r.last.date, { day: "numeric", month: "short" })} at ${r.last.score}`;
+        el.querySelector(".sc b").textContent = r.best;
+        const sm = el.querySelector(".sc small");
+        sm.textContent = gain > 0 ? `+${gain} BPM` : "best BPM"; if (gain > 0) sm.className = "up";
+        el.title = r.pts.map(p => `${fmtDay(p.date, { day: "numeric", month: "short" })}: ${p.score}`).join("\\n");
+        sec.appendChild(el);
+      }
     }
     body.appendChild(sec);
   }
@@ -944,7 +960,7 @@ $("dashFilter").addEventListener("keydown", ev => {
 $("whoProgress").addEventListener("click", ev => { ev.preventDefault(); if (student && student.id) openProgress(student.id, student.name); });
 $("brand").addEventListener("click", ev => { ev.preventDefault(); location.hash = "log"; location.reload(); });
 $("dashBack").addEventListener("click", closeStudent);
-document.querySelector('.tabs a[data-view="dashboard"]').addEventListener("click", () => { if (dashOpen) closeStudent(); });
+
 $("histStudent").addEventListener("change", () => loadHistory());
 $("histMore").addEventListener("click", () => loadHistory(true));
 $("addRow").addEventListener("click", () => focusRow(addRow()));
