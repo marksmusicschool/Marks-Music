@@ -232,7 +232,6 @@ body.in .strings{display:none}
       <nav class="tabs" aria-label="Pages">
         <a href="#log" data-view="log">Log</a>
         <a href="#dashboard" data-view="dashboard">Progress</a>
-        <a href="#history" data-view="history">Log History</a>
         <a href="#access" data-view="access">Admin</a>
       </nav>
       <button id="lock" class="ghost lock" type="button">Lock</button>
@@ -322,17 +321,6 @@ body.in .strings{display:none}
       </div>
     </div>
 
-    <!-- LOG HISTORY -->
-    <div id="view-history" class="view" hidden>
-      <section>
-        <div class="pagehead"><h2 class="pagetitle">Log History</h2><span id="histCount" class="note"></span></div>
-        <select id="histStudent" class="field" aria-label="Show logs for"><option value="">All students</option></select>
-        <div id="histList" class="hist"></div>
-        <button id="histMore" class="ghost more" type="button" hidden>Load more</button>
-        <p id="histNote" class="note" role="status"></p>
-      </section>
-    </div>
-
     <!-- STUDENT ACCESS -->
     <div id="view-access" class="view" hidden>
       <section>
@@ -347,6 +335,13 @@ body.in .strings{display:none}
           <p class="note">Share this privately with the student. It cannot be viewed again; reset it if it is lost.</p>
         </div>
         <div id="accountsList" class="list"></div>
+      </section>
+      <section class="admin-tool" aria-labelledby="historyHeading">
+        <div class="pagehead"><h3 id="historyHeading" class="pagetitle">Log History</h3><span id="histCount" class="note"></span></div>
+        <select id="histStudent" class="field" aria-label="Show logs for"><option value="">All students</option></select>
+        <div id="histList" class="hist"></div>
+        <button id="histMore" class="ghost more" type="button" hidden>Load more</button>
+        <p id="histNote" class="note" role="status"></p>
       </section>
     </div>
   </div>
@@ -733,7 +728,7 @@ function drawCalRows(){
 }
 
 /* ---------- pages ---------- */
-const VIEWS = ["log", "dashboard", "history", "access"];
+const VIEWS = ["log", "dashboard", "access"];
 let dashStudents = null, dashOpen = null;      // cached Dashboard list, open student id
 const progressCache = new Map(), progressRequests = new Map(), progressVersions = new Map();
 function preloadProgress(id, force = false){
@@ -763,8 +758,7 @@ function showView(){
   for (const k of VIEWS) $("view-" + k).hidden = k !== v;
   document.querySelectorAll(".tabs a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
   if (v === "dashboard") { if (student && student.id) openProgress(student.id, student.name); else if (!dashOpen) loadDashboard(); }
-  if (v === "history") loadHistory();
-  if (v === "access") loadStudentAccounts();
+  if (v === "access") { loadStudentAccounts(); loadHistory(); }
   window.scrollTo(0, 0);
 }
 
