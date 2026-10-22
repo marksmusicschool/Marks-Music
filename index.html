@@ -19,17 +19,17 @@
 <style>
 /* Layout: one narrow column, like a teacher's logbook page. Six string hairlines are the only ornament. */
 :root{
-  --bg:#f6f5f2; --surface:#ffffff; --ink:#17171a; --muted:#6c6a66; --line:#e3e1dc;
+  --bg:#f6f5f2; --surface:#ffffff; --ink:#17171a; --muted:#6c6a66; --soft-ink:#b6b4ae; --line:#e3e1dc;
   --brass:#a8711c; --brass-soft:#f3e7d2; --good:#2f7a4b; --bad:#b0352b;
   --display:"Instrument Serif", "Iowan Old Style", Georgia, serif;
   --body:"Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
   --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121214; --surface:#1b1b1e; --ink:#efede8; --muted:#9a978f; --line:#2c2b2f;
+  --bg:#121214; --surface:#1b1b1e; --ink:#efede8; --muted:#9a978f; --soft-ink:#dedbd4; --line:#2c2b2f;
   --brass:#d9a24a; --brass-soft:#3a2e1a; --good:#6cc28e; --bad:#ef7d72; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#121214; --surface:#1b1b1e; --ink:#efede8; --muted:#9a978f; --line:#2c2b2f;
+  --bg:#121214; --surface:#1b1b1e; --ink:#efede8; --muted:#9a978f; --soft-ink:#dedbd4; --line:#2c2b2f;
   --brass:#d9a24a; --brass-soft:#3a2e1a; --good:#6cc28e; --bad:#ef7d72; color-scheme:dark}
 
 *{box-sizing:border-box}
@@ -168,7 +168,7 @@ header.top{flex-wrap:wrap;row-gap:14px;margin-bottom:28px}
 .stat span{font-size:12px;color:var(--muted)}
 .grp{margin-bottom:30px;display:grid;gap:0}
 .grp .label{padding-bottom:8px;border-bottom:1px solid var(--line)}
-.grp .rhythm-label{margin-top:14px;padding-bottom:6px;font-size:10px}.grp .category-label{font-size:13px;color:var(--brass)}.grp .type-label{opacity:.5}.grp .variant-label{opacity:1}.grp .variant-label{margin-top:14px;padding-bottom:6px}
+.grp .rhythm-label{margin-top:14px;padding-bottom:6px;font-size:10px}.grp .category-label{font-size:13px;color:var(--brass)}.grp .type-label{opacity:1;color:var(--soft-ink)}.grp .variant-label{opacity:1}.grp .variant-label{margin-top:14px;padding-bottom:6px}
 .prog{display:grid;grid-template-columns:minmax(0,1fr) 104px 64px;gap:12px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line)}
 .prog .nm{min-width:0}
 .prog .nm b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
