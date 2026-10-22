@@ -78,3 +78,9 @@ These notes are the working map for future changes. Update this file in the same
 - Read-only catalogue inspection confirmed song item names end in “open chords” or “bar chords” and are stored under their key subcategories.
 - Published source on `main`: `2d3a506dd0e32bad10eb556e7723989b2d7aaf1a` (`site/index.html`). Deployed app on `gh-pages`: `a382b79124f7ab1c75b71323599dfb67ad9812da` (`index.html`).
 - Verification: checked both committed files for duplicate-category suppression, song chord-style grouping, and the three heading styles. No browser interaction was performed.
+
+## Heading contrast adjustment — 2026-10-22
+
+- Reduced opacity on the Songs scale/key headings (such as G Major and C Major) and kept Open/Bar Chords headings at full opacity, making the key headings lighter than the chord-style headings.
+- Published source on `main`: `4a754da0504e6609dff6685b7809dc8190a85701`. Deployed app on `gh-pages`: `a15ecc8bc4c2e66114756fbcd7280ef6b265e383`.
+- Verification: confirmed both files use the lighter key heading and full-strength chord heading styles.
