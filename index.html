@@ -202,7 +202,7 @@ select.field{width:100%;appearance:none;-webkit-appearance:none;background-image
 .srow[aria-selected="true"]{background:var(--brass-soft)}
 .done .when{font:500 12px var(--body);color:var(--muted)}
 body.in .strings{display:none}
-.admin-tool{border:1px solid var(--line);border-radius:12px;padding:14px;margin:8px 0 24px}.admin-tool h3{margin:0 0 10px;font:500 18px var(--display)}.account-actions{display:flex;gap:8px}.account-row.inactive{opacity:.75} .admin-tool{overflow:hidden}.preview-list{max-height:232px;overflow-y:auto;overscroll-behavior:contain}.preview-clip{max-height:220px;overflow-y:auto;overscroll-behavior:contain}.admin-subpage #histList{max-height:none;overflow:visible}.admin-subpage{padding-bottom:24px}.admin-subpage>.backAdmin{margin-bottom:16px}.inactive-details{margin-top:24px}.inactive-details summary{cursor:pointer;color:var(--muted);padding:12px 0}.account-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
+.admin-tool{border:1px solid var(--line);border-radius:12px;padding:14px;margin:8px 0 24px}.admin-tool h3{margin:0 0 10px;font:500 18px var(--display)}.account-actions{display:flex;gap:8px}.account-row.inactive{opacity:.75} .admin-tool{overflow:hidden}.preview-list{max-height:232px;overflow-y:auto;overscroll-behavior:contain}.student-sort{display:flex;align-items:center;gap:10px;margin:12px 0}.student-sort .field{max-width:240px}.category-title{font:400 28px/1.1 var(--display);color:var(--brass);margin:22px 0 8px}.sort-note{margin:0 0 8px}.preview-clip{max-height:220px;overflow-y:auto;overscroll-behavior:contain}.admin-subpage #histList{max-height:none;overflow:visible}.admin-subpage{padding-bottom:24px}.admin-subpage>.backAdmin{margin-bottom:16px}.inactive-details{margin-top:24px}.inactive-details summary{cursor:pointer;color:var(--muted);padding:12px 0}.account-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
 .account-row strong{display:block;font-weight:500}
 .account-row small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
 #view-access a{color:var(--brass)}
@@ -334,7 +334,7 @@ body.in .strings{display:none}
           <p id="accountNote" class="note" role="status"></p>
           <div id="credentialBox" class="done" hidden><h3>Temporary login</h3><p id="credentialUsername"></p><p><strong id="credentialPassword" class="mono"></strong></p><button id="copyCredential" class="btn" type="button">Copy temporary password</button><p class="note">Share this privately with the student. It cannot be viewed again; reset it if lost.</p></div>
           <div id="accountsPreviewList" class="list preview-list"></div>
-          <button id="showAllStudents" class="ghost more" type="button">Show all active students</button>
+          <button id="showAllStudents" class="ghost more" type="button">Show all Students</button>
         </section>
         <section class="admin-tool">
           <div class="pagehead"><h2 class="pagetitle">Log History</h2><span id="histCount" class="note"></span></div>
@@ -344,9 +344,11 @@ body.in .strings{display:none}
       </div>
       <section id="adminStudentsPage" class="admin-subpage" hidden>
         <button class="ghost backAdmin" type="button">← Back to Admin</button>
-        <div class="pagehead"><h2 class="pagetitle">Active Students</h2></div>
-        <div id="accountsList" class="list"></div>
-        <details class="inactive-details"><summary>Inactive Students</summary><div id="inactiveStudentsList" class="list"></div></details>
+        <div class="pagehead"><h2 class="pagetitle">All Students</h2></div>
+        <div class="student-sort"><label class="label" for="studentSort">Sort active students</label><select id="studentSort" class="field"><option value="name">Name (A–Z)</option><option value="performance">Performance</option></select></div>
+        <p id="studentSortNote" class="note sort-note" role="status"></p>
+        <h3 class="category-title">Active Students</h3><div id="accountsList" class="list"></div>
+        <h3 class="category-title">Deactivated Students</h3><div id="inactiveStudentsList" class="list"></div>
       </section>
       <section id="adminHistoryPage" class="admin-subpage" hidden>
         <button class="ghost backAdmin" type="button">← Back to Admin</button>
@@ -1025,7 +1027,7 @@ async function studentAdminApi(action, data = {}){
   if (!res.ok) throw { code: body.error || "server_error", status: res.status };
   return body;
 }
-let adminStudents = [];
+let adminStudents = [], studentPerformance = new Map(), performanceRequest = null;
 async function loadStudentAccounts(){
   for (const id of ["accountsPreviewList", "accountsList", "inactiveStudentsList"]) $(id).innerHTML = '<p class="note"><span class="pulse"></span>Loading students…</p>';
   $("accountNote").textContent = "";
@@ -1033,16 +1035,47 @@ async function loadStudentAccounts(){
     const result = await studentAdminApi("admin_student_accounts"); adminStudents = result.students || [];
     const active = adminStudents.filter(s => s.active), inactive = adminStudents.filter(s => !s.active);
     $("accountCount").textContent = `${active.length} active students`;
-    drawStudentAccounts(active.slice(0, 4), "accountsPreviewList"); drawStudentAccounts(active, "accountsList"); drawStudentAccounts(inactive, "inactiveStudentsList");
+    drawStudentAccounts(active, "accountsPreviewList"); drawStudentAccounts(sortStudents(active), "accountsList"); drawStudentAccounts(inactive, "inactiveStudentsList");
     $("showAllStudents").hidden = false;
   } catch (e) { for (const id of ["accountsPreviewList", "accountsList", "inactiveStudentsList"]) $(id).innerHTML = ""; $("accountNote").textContent = errText(e); }
+}
+function sortStudents(list){
+  const mode = $("studentSort")?.value || "name";
+  return [...list].sort((a, b) => {
+    if (mode === "performance") {
+      const pa = studentPerformance.get(a.id) || { exercises: -1, score: -1 }, pb = studentPerformance.get(b.id) || { exercises: -1, score: -1 };
+      return pb.exercises - pa.exercises || pb.score - pa.score || a.name.localeCompare(b.name);
+    }
+    return a.name.localeCompare(b.name);
+  });
+}
+async function loadStudentPerformance(){
+  if (performanceRequest) return performanceRequest;
+  const active = adminStudents.filter(s => s.active);
+  $("studentSortNote").textContent = "Loading exercise totals and scores…";
+  performanceRequest = (async () => {
+    let next = 0;
+    await Promise.all(Array.from({length: Math.min(4, active.length)}, async () => {
+      while (next < active.length) {
+        const student = active[next++];
+        try {
+          const result = await api("student_history", { student_id: Number(student.id) });
+          const logs = result.logs || [];
+          studentPerformance.set(student.id, { exercises: logs.length, score: logs.reduce((sum, log) => sum + Number(log.score || 0), 0) });
+        } catch { studentPerformance.set(student.id, { exercises: 0, score: 0 }); }
+      }
+    }));
+    $("studentSortNote").textContent = "Performance ranks by total exercises logged, then the sum of their scores. Click a heading to choose another sort later.";
+    drawStudentAccounts(sortStudents(active), "accountsList");
+  })().finally(() => { performanceRequest = null; });
+  return performanceRequest;
 }
 function drawStudentAccounts(list, boxId = "accountsList"){
   const box = $(boxId); box.innerHTML = "";
   for (const student of list){
     const row = document.createElement("div"); row.className = "account-row" + (student.active ? "" : " inactive");
     const info = document.createElement("div"), name = document.createElement("strong"), status = document.createElement("small");
-    name.textContent = student.name; status.textContent = `${student.active ? "Active" : "Inactive"} · ${student.has_login ? (student.must_change_password ? "Login set · temporary password needs changing" : "Login set") : "No login yet"}`;
+    name.textContent = student.name; const perf = studentPerformance.get(student.id); status.textContent = `${student.active ? "Active" : "Deactivated"} · ${student.has_login ? (student.must_change_password ? "Login set · temporary password needs changing" : "Login set") : "No login yet"}${student.active && perf ? ` · ${perf.exercises} exercises · score ${perf.score}` : ""}`;
     info.append(name, status);
     const actions = document.createElement("div"); actions.className = "account-actions";
     const login = document.createElement("button"); login.type = "button"; login.className = "ghost"; login.textContent = student.has_login ? "Reset password" : "Create login"; login.disabled = !student.active;
@@ -1093,6 +1126,7 @@ async function enter(pw){
 }
 
 $("showAllStudents").addEventListener("click", () => showAdminPage("students"));
+$("studentSort").addEventListener("change", async () => { if ($("studentSort").value === "performance" && studentPerformance.size < adminStudents.filter(s => s.active).length) await loadStudentPerformance(); else drawStudentAccounts(sortStudents(adminStudents.filter(s => s.active)), "accountsList"); });
 $("showAllHistory").addEventListener("click", () => showAdminPage("history"));
 document.querySelectorAll(".backAdmin").forEach(button => button.addEventListener("click", () => showAdminPage("home")));
 document.querySelector('.tabs a[data-view="access"]').addEventListener("click", event => {
