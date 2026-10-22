@@ -69,3 +69,12 @@ These notes are the working map for future changes. Update this file in the same
 - Published source on `main`: follow-up commits `ca3acf7837324109f6f7480c4bc05c28bf2d929e` and `39febd60e2299edd718e7a39388511e3fc063ae9` (`site/index.html`). The latter corrects a duplicated async declaration caught during review.
 - Deployed app on `gh-pages`: `3f9c55c951dac25dc493ad8508bac7faba2d94e3` (`index.html`). The blocked deployment attempt was corrected before publishing.
 - Verification: source and deployed page were checked for one valid async progress loader, student selection synchronization, and the new category style. No browser interaction was performed.
+
+## Progress category hierarchy refinement — 2026-10-22
+
+- Prevented duplicate subcategory labels when an exercise subcategory matches its main category (for example, “Melodies” under “Melodies”).
+- Songs are now grouped as main category → scale/key subcategory → chord style (“Open Chords” or “Bar Chords”), inferred from the item name suffix. Existing song key subcategories remain intact.
+- Main category titles use brass/yellow; scale/key subcategory titles are lighter gray; chord-style titles use the normal gray heading style. Other exercise categories retain their rhythm grouping.
+- Read-only catalogue inspection confirmed song item names end in “open chords” or “bar chords” and are stored under their key subcategories.
+- Published source on `main`: `2d3a506dd0e32bad10eb556e7723989b2d7aaf1a` (`site/index.html`). Deployed app on `gh-pages`: `a382b79124f7ab1c75b71323599dfb67ad9812da` (`index.html`).
+- Verification: checked both committed files for duplicate-category suppression, song chord-style grouping, and the three heading styles. No browser interaction was performed.
