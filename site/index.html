@@ -1000,6 +1000,19 @@ $("dashFilter").addEventListener("keydown", ev => {
 });
 $("whoProgress").addEventListener("click", ev => { ev.preventDefault(); if (student && student.id) openProgress(student.id, student.name); });
 $("brand").addEventListener("click", ev => { ev.preventDefault(); location.hash = "log"; location.reload(); });
+function clearSelectedStudent(){
+  student = null; classAt = null; bests = new Map();
+  $("studentInput").value = ""; $("who").hidden = true;
+  document.querySelectorAll("#today .chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+  loadDayLogs(); refreshRows(); updateSave();
+  if (dashOpen !== null) closeStudent();
+}
+document.querySelectorAll(".tabs a").forEach(tab => tab.addEventListener("click", event => {
+  if (location.hash.slice(1) !== tab.dataset.view) return;
+  if (tab.dataset.view !== "log" && tab.dataset.view !== "dashboard") return;
+  event.preventDefault();
+  clearSelectedStudent();
+}));
 $("dashBack").addEventListener("click", closeStudent);
 
 $("histStudent").addEventListener("change", () => loadHistory());
