@@ -90,3 +90,12 @@ These notes are the working map for future changes. Update this file in the same
 - Replaced transparency on Songs scale/key headings with a fully opaque light color: `--soft-ink` is `#b6b4ae` in light mode and `#dedbd4` in dark mode. Open/Bar Chords headings retain the regular muted gray.
 - Published source on `main`: `6764b5b6ec3f49b3bfffe21a4228ed4e68b57ea5`. Deployed app on `gh-pages`: `cec850ece0f67d894d897cd0628213c636ada18e`.
 - Verification: confirmed the scale heading uses full opacity and the solid theme variable in both files.
+
+## Student Progress UI parity — 2026-10-22
+
+- The student portal is a separate page, `student.html`; changes to admin `index.html` do not propagate to it automatically. Keep Progress UI behavior and presentation aligned across admin `index.html` and student `student.html`.
+- Applied the current Progress hierarchy to the student page: category → subtype (including song scale/key) → rhythm or song chord style. Matching category/subcategory names do not render twice.
+- Student page heading colors now match admin: brass main categories; fully opaque, lighter `--soft-ink` scale/key headings; muted gray Open/Bar Chords and rhythm headings. Soft ink values match both light and dark admin themes.
+- Published student page on `gh-pages`: `5d15238f1b513d7cf4c723dc066b35ca07695977`. Updated student source on `feature/student-portal-auth`: `8dc63edd849b4b6f4f819459b0897eef68986548`.
+- Verification: confirmed both student page copies contain category deduplication, song Open/Bar grouping, rhythm grouping, and the solid scale/key theme colors. No student account browser session was used for runtime visual verification.
+- Going forward, every Progress UI change should be applied to the admin page and student page, then checked on both deployed copies before reporting completion.
