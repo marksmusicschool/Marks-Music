@@ -44,6 +44,8 @@ These notes are the working map for future changes. Update this file in the same
 
 ## Change log
 
+- 2026-10-22: Admin login repair. The Progress code on `gh-pages` initially contained escaped template-string delimiters, causing a JavaScript parse error before the login handler initialized. Replaced that grouping block with the corrected implementation from `main/site/index.html` and published it to `gh-pages/index.html` in commit `644366e372e47737676fcbd0a1b84b0f6fbd7796`. No password or credential was accessed.
+
 - 2026-10-22: Teacher Progress workflow and rhythm grouping. On `main/site/index.html`, renamed the visible Dashboard tab to Progress; selecting Progress opens the current saved student from Log when one is loaded; progress rows now group supported rhythm suffixes (downstroke, Waltz, Foxtrot, Strumming Pattern N) within their exercise category and retain catalogue order inside each group. The change was published to `gh-pages/index.html` in commit `caf5a176ae4507eae15a1fe6aa261ac2c7a13ca9` after the user confirmed that requested app changes should go live.
 
 - 2026-10-22: Initial source/live-system review. Confirmed repository and project identity, read app/install docs and the complete static app/backend/calendar source, inspected live project metadata, public table structure, migration history, and live Edge Function inventory. No production data or configuration was changed. Created this baseline map.
