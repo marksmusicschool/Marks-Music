@@ -835,7 +835,7 @@ function drawStudentList(){
   }
 }
 async function openStudent(st){
-  if (!student || Number(student.id) !== Number(st.id)) pickStudent(st);
+  if (!student || Number(student.id) !== Number(st.id)) await pickStudent(st);
   dashOpen = st.id;
   $("dashList").hidden = true; $("dashDetail").hidden = false; window.scrollTo(0, 0);
   setStudentName($("dName"), st.name);
