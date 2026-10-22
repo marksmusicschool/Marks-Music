@@ -133,3 +133,12 @@ These notes are the working map for future changes. Update this file in the same
 - Opening Admin loads both student account controls and Log History.
 - Deployed on `gh-pages`: `1ceb1a5f11a7dbe1eb273ca384f6f59c97d75a55`.
 - Verification: confirmed no standalone history view/tab remains in the deployed admin page and the history controls are inside Admin.
+
+## Compact Admin previews and dedicated lists — 2026-10-23
+
+- Renamed the student-management area to “Active Students” and limited the Admin overview to a four-row preview.
+- Added dedicated Active Students and Log History pages with Back to Admin buttons. Clicking Admin again from either page returns to the overview.
+- The full student page has active controls plus a separate expandable Inactive Students list for reactivation. Create/reset login actions remain available for active students.
+- Log History preview is height-limited; the full page retains filtering and pagination.
+- Deployed on `gh-pages`: `f38dd19646a185e7dc1329240b82bd20fb413ced`.
+- Verification: confirmed preview and full-list containers, dedicated page navigation, Admin return handler, inactive reactivation list, and history controls are present.
