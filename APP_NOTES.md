@@ -60,3 +60,12 @@ These notes are the working map for future changes. Update this file in the same
 - The cache lives in page memory only; it is rebuilt when the page is reloaded. No database schema or Edge Function changes were needed.
 - Published source update on `main`: `d8343407fedde8ffc6e92c2e9d0d103e03840f71` (`site/index.html`). Deployed student/admin page on `gh-pages`: `f5d0fe42b747d5b166b21ad18ecf3a310f172e51` (`index.html`).
 - Verification: fetched both committed files and confirmed the preload hooks, refresh after save, nested type/rhythm grouping, and cache version guard are present. Runtime browser interaction was not exercised in this change.
+
+## Progress-to-Log selection and category styling — 2026-10-22
+
+- Selecting a student from the Progress list now selects that student in the Log form as well. Selecting the same student already in Log does not trigger a redundant selection.
+- Main category headings in Progress use the existing brass/yellow theme color and a slightly larger size; type and rhythm headings remain at their existing sizes.
+- No database or Edge Function changes were needed.
+- Published source on `main`: follow-up commits `ca3acf7837324109f6f7480c4bc05c28bf2d929e` and `39febd60e2299edd718e7a39388511e3fc063ae9` (`site/index.html`). The latter corrects a duplicated async declaration caught during review.
+- Deployed app on `gh-pages`: `3f9c55c951dac25dc493ad8508bac7faba2d94e3` (`index.html`). The blocked deployment attempt was corrected before publishing.
+- Verification: source and deployed page were checked for one valid async progress loader, student selection synchronization, and the new category style. No browser interaction was performed.
