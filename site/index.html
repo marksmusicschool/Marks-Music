@@ -813,8 +813,8 @@ function drawProgress(st, logs){
   const categories = new Map();
   const rhythmFor = it => {
     const label = String(it.name || it.label || "");
-    const match = label.match(/(?:^|[\\s-])(downstroke|waltz|foxtrot|strumming pattern \\d+)$/i);
-    return match ? match[1].toLowerCase().replace(/\\s+/g, " ") : null;
+    const match = label.match(/(?:^|[\s-])(downstroke|waltz|foxtrot|strumming pattern \d+)$/i);
+    return match ? match[1].toLowerCase().replace(/\s+/g, " ") : null;
   };
   const pos = it => { const i = items.indexOf(it); return i < 0 ? 1e9 : i; };
   for (const r of rowsOut.sort((a, b) => pos(a.it) - pos(b.it))) {
@@ -844,7 +844,7 @@ function drawProgress(st, logs){
         el.querySelector(".sc b").textContent = r.best;
         const sm = el.querySelector(".sc small");
         sm.textContent = gain > 0 ? `+${gain} BPM` : "best BPM"; if (gain > 0) sm.className = "up";
-        el.title = r.pts.map(p => `${fmtDay(p.date, { day: "numeric", month: "short" })}: ${p.score}`).join("\\n");
+        el.title = r.pts.map(p => `${fmtDay(p.date, { day: "numeric", month: "short" })}: ${p.score}`).join("\n");
         sec.appendChild(el);
       }
     }
