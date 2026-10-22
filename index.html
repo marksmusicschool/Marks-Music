@@ -869,14 +869,14 @@ function drawProgress(st, logs){
       for (const r of group.rows) {
         const el = document.createElement("div"); el.className = "prog";
         const gain = r.best - r.first;
-        el.innerHTML = \`<div class="nm"><b></b><small><span class="code"></span><span class="when"></span></small></div>\${spark(r.pts)}<div class="sc"><b></b><small></small></div>\`;
+        el.innerHTML = `<div class="nm"><b></b><small><span class="code"></span><span class="when"></span></small></div>${spark(r.pts)}<div class="sc"><b></b><small></small></div>`;
         el.querySelector("b").textContent = r.it.label;
         el.querySelector(".code").textContent = codeOf(r.it);
-        el.querySelector(".when").textContent = \`\${r.pts.length}× · last \${fmtDay(r.last.date, { day: "numeric", month: "short" })} at \${r.last.score}\`;
+        el.querySelector(".when").textContent = `${r.pts.length}× · last ${fmtDay(r.last.date, { day: "numeric", month: "short" })} at ${r.last.score}`;
         el.querySelector(".sc b").textContent = r.best;
         const sm = el.querySelector(".sc small");
-        sm.textContent = gain > 0 ? \`+\${gain} BPM\` : "best BPM"; if (gain > 0) sm.className = "up";
-        el.title = r.pts.map(p => \`\${fmtDay(p.date, { day: "numeric", month: "short" })}: \${p.score}\`).join("\n");
+        sm.textContent = gain > 0 ? `+${gain} BPM` : "best BPM"; if (gain > 0) sm.className = "up";
+        el.title = r.pts.map(p => `${fmtDay(p.date, { day: "numeric", month: "short" })}: ${p.score}`).join("\n");
         sec.appendChild(el);
       }
     }
