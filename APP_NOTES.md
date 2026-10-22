@@ -159,3 +159,12 @@ These notes are the working map for future changes. Update this file in the same
 - Added a sorting panel for active students: Name (A–Z) or Performance. Performance loads each active student's full log history, ranks by total exercise log entries, then by the sum of logged scores, with name as a final tie-breaker. It uses up to four concurrent history requests and shows the totals with each active student after loading.
 - Published to gh-pages/index.html in commits 77c79cbb95dad69ad0ce94339b6c4c5b4d3479a0 and 0e18abd27b937f2c7a80d91a7792f8ae7a8ef23e.
 - Verification: fetched the deployed page and confirmed all active rows are rendered into the scrollable preview, the updated label and categories, sort selector and history-based ranking, plus the Activate action. No database or student data changes were made.
+
+
+## Admin sort and history preview refinement — 2026-10-23
+
+- Removed performance sorting and its per-student history requests. The All Students page now has a compact “Sort by” dropdown with only A–Z, and active students remain alphabetized.
+- The Back to Admin controls on All Students and Log History now sit above their page titles with smaller type and a left indent.
+- The Admin Log History preview renders only entries dated within the past seven days. The Show all Log History page renders the full currently loaded history and retains its Load more pagination; switching pages redraws history for the correct view.
+- Published admin page to gh-pages/index.html in commits 04eeff055a7cfef54db1a834a62b567561921982 and 6ee12ce0f41a1640d932f8f55e9c437304ea87ab.
+- Verification: fetched the deployed file and confirmed the single A–Z option, no performance sort code, compact shared Back to Admin styling, seven-day preview filter, unfiltered full-history rendering, and Show all Log History control. No database changes were needed.
