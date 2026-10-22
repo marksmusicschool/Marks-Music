@@ -99,3 +99,14 @@ These notes are the working map for future changes. Update this file in the same
 - Published student page on `gh-pages`: `5d15238f1b513d7cf4c723dc066b35ca07695977`. Updated student source on `feature/student-portal-auth`: `8dc63edd849b4b6f4f819459b0897eef68986548`.
 - Verification: confirmed both student page copies contain category deduplication, song Open/Bar grouping, rhythm grouping, and the solid scale/key theme colors. No student account browser session was used for runtime visual verification.
 - Going forward, every Progress UI change should be applied to the admin page and student page, then checked on both deployed copies before reporting completion.
+
+## Admin student management — 2026-10-23
+
+- Student Access is now the Admin hub. It supports adding a student, creating/resetting their portal login, and deactivating/reactivating their account.
+- Added `public.students.active boolean not null default true`; existing students remain active after migration. Deactivation changes only this flag. Logs, accounts, and student records remain stored.
+- Active-only roster summary keeps inactive students out of the Log/Progress student pickers. The student portal rejects login, refresh, and authenticated actions for inactive students. Admin can reactivate them, preserving their prior account and data.
+- Student portal admin API actions require the existing admin password check. New students are added active, then use the existing “Create login” action to issue a temporary password.
+- Database migration: `add_student_active_status`; roster function migration: `filter_inactive_students_from_summary`.
+- Student portal Edge Function deployed as version 2.
+- Admin UI deployed on `gh-pages`: `815b14e9ab3dffcc87099cd26b3ce3e5ee654afa`.
+- Verification: read-only schema query confirmed the active column; updated `mm.students_summary` filters inactive records; deployed Edge Function and UI source contain create/toggle actions and inactive-login checks. Existing student data was not moved or deleted.
