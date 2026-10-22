@@ -166,7 +166,7 @@ header.top{flex-wrap:wrap;row-gap:14px;margin-bottom:28px}
 .stat span{font-size:12px;color:var(--muted)}
 .grp{margin-bottom:30px;display:grid;gap:0}
 .grp .label{padding-bottom:8px;border-bottom:1px solid var(--line)}
-.grp .rhythm-label{margin-top:14px;padding-bottom:6px;font-size:10px}
+.grp .rhythm-label{margin-top:14px;padding-bottom:6px;font-size:10px}.grp .category-label{font-size:13px;color:var(--brass)}
 .prog{display:grid;grid-template-columns:minmax(0,1fr) 104px 64px;gap:12px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line)}
 .prog .nm{min-width:0}
 .prog .nm b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -796,7 +796,8 @@ function drawStudentList(){
     box.appendChild(b);
   }
 }
-async function openStudent(st){
+async async function openStudent(st){
+  if (!student || Number(student.id) !== Number(st.id)) pickStudent(st);
   dashOpen = st.id;
   $("dashList").hidden = true; $("dashDetail").hidden = false; window.scrollTo(0, 0);
   $("dName").textContent = st.name; $("dMeta").textContent = st.first_class ? `Logging since ${fmtDay(st.first_class, { month: "short", year: "numeric" })}` : "No classes logged yet"; $("dStats").innerHTML = "";
@@ -852,7 +853,7 @@ function drawProgress(st, logs){
   }
   for (const [category, types] of categories) {
     const sec = document.createElement("div"); sec.className = "grp";
-    const categoryHeading = document.createElement("div"); categoryHeading.className = "label";
+    const categoryHeading = document.createElement("div"); categoryHeading.className = "label category-label";
     categoryHeading.textContent = category; sec.appendChild(categoryHeading);
     for (const [type, groups] of types) {
       const typeHeading = document.createElement("div"); typeHeading.className = "label type-label";
