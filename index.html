@@ -202,7 +202,7 @@ select.field{width:100%;appearance:none;-webkit-appearance:none;background-image
 .srow[aria-selected="true"]{background:var(--brass-soft)}
 .done .when{font:500 12px var(--body);color:var(--muted)}
 body.in .strings{display:none}
-.admin-tool{border:1px solid var(--line);border-radius:12px;padding:14px;margin:8px 0 24px}.admin-tool h3{margin:0 0 10px;font:500 18px var(--display)}.account-actions{display:flex;gap:8px}.account-row.inactive{opacity:.75} .admin-tool{overflow:hidden}.preview-list{max-height:232px;overflow:hidden}.preview-clip{max-height:220px;overflow:hidden}.admin-subpage #histList{max-height:none;overflow:visible}.admin-subpage{padding-bottom:24px}.admin-subpage>.backAdmin{margin-bottom:16px}.inactive-details{margin-top:24px}.inactive-details summary{cursor:pointer;color:var(--muted);padding:12px 0}.account-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
+.admin-tool{border:1px solid var(--line);border-radius:12px;padding:14px;margin:8px 0 24px}.admin-tool h3{margin:0 0 10px;font:500 18px var(--display)}.account-actions{display:flex;gap:8px}.account-row.inactive{opacity:.75} .admin-tool{overflow:hidden}.preview-list{max-height:232px;overflow-y:auto;overscroll-behavior:contain}.preview-clip{max-height:220px;overflow-y:auto;overscroll-behavior:contain}.admin-subpage #histList{max-height:none;overflow:visible}.admin-subpage{padding-bottom:24px}.admin-subpage>.backAdmin{margin-bottom:16px}.inactive-details{margin-top:24px}.inactive-details summary{cursor:pointer;color:var(--muted);padding:12px 0}.account-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
 .account-row strong{display:block;font-weight:500}
 .account-row small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
 #view-access a{color:var(--brass)}
@@ -962,6 +962,10 @@ async function loadHistory(more = false){
     if (hist.sid !== sid) return;
     hist.rows.push(...(r.rows || [])); hist.total = r.total || 0;
     drawHistory();
+    const oldestDate = hist.rows[hist.rows.length - 1]?.date;
+    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekAgoDate = localISO(weekAgo);
+    if (hist.rows.length < hist.total && oldestDate && oldestDate >= weekAgoDate) void loadHistory(true);
   } catch (e) { if (!more) $("histList").innerHTML = ""; $("histNote").textContent = errText(e); }
 }
 function drawHistory(){
