@@ -796,7 +796,7 @@ function drawStudentList(){
     box.appendChild(b);
   }
 }
-async async function openStudent(st){
+async function openStudent(st){
   if (!student || Number(student.id) !== Number(st.id)) pickStudent(st);
   dashOpen = st.id;
   $("dashList").hidden = true; $("dashDetail").hidden = false; window.scrollTo(0, 0);
