@@ -110,3 +110,11 @@ These notes are the working map for future changes. Update this file in the same
 - Student portal Edge Function deployed as version 2.
 - Admin UI deployed on `gh-pages`: `815b14e9ab3dffcc87099cd26b3ce3e5ee654afa`.
 - Verification: read-only schema query confirmed the active column; updated `mm.students_summary` filters inactive records; deployed Edge Function and UI source contain create/toggle actions and inactive-login checks. Existing student data was not moved or deleted.
+
+## Reselecting Log or Progress clears student — 2026-10-23
+
+- Clicking Log or Progress while already on that tab clears the selected student from the shared Log/Progress state. Reselecting Progress returns from the student detail to the full progress list.
+- Switching between Log and Progress remains unchanged; the selection is cleared only when clicking the tab already open.
+- Applied to admin source `site/index.html` and deployed page `gh-pages/index.html`.
+- Commits: main `488770dfebab394f7155d72ded242730201a1a6a`; gh-pages `2a31691154cf6e45787d055be183f26bc1aff301`.
+- Verification: confirmed the same-tab click handler is present in both files. No browser interaction was performed.
