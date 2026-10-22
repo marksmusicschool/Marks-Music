@@ -118,3 +118,11 @@ These notes are the working map for future changes. Update this file in the same
 - Applied to admin source `site/index.html` and deployed page `gh-pages/index.html`.
 - Commits: main `488770dfebab394f7155d72ded242730201a1a6a`; gh-pages `2a31691154cf6e45787d055be183f26bc1aff301`.
 - Verification: confirmed the same-tab click handler is present in both files. No browser interaction was performed.
+
+## Cross-page student data readiness — 2026-10-23
+
+- Selecting a student in Log continues to preload Progress history while loading Log best scores.
+- Selecting a student in Progress now awaits the Log best-score request while Progress history loads, so the Progress view is not considered ready until both views' data is available. Requests run concurrently through the existing selection flow.
+- Applied to admin source `site/index.html` and deployed admin page `gh-pages/index.html`.
+- Commits: main `1a209a1199697fe542f9bc83c1a8eabee800b663`; gh-pages `ff7c23ca800069ed3c93f2d948a23b96a9cefcfb`.
+- Verification: confirmed Progress selection awaits Log data loading; the Log selection path still starts Progress history preload.
