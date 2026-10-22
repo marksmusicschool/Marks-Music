@@ -202,7 +202,7 @@ select.field{width:100%;appearance:none;-webkit-appearance:none;background-image
 .srow[aria-selected="true"]{background:var(--brass-soft)}
 .done .when{font:500 12px var(--body);color:var(--muted)}
 body.in .strings{display:none}
-.admin-tool{border:1px solid var(--line);border-radius:12px;padding:14px;margin:8px 0 24px}.admin-tool h3{margin:0 0 10px;font:500 18px var(--display)}.account-actions{display:flex;gap:8px}.account-row.inactive{opacity:.75}.account-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
+.admin-tool{border:1px solid var(--line);border-radius:12px;padding:14px;margin:8px 0 24px}.admin-tool h3{margin:0 0 10px;font:500 18px var(--display)}.account-actions{display:flex;gap:8px}.account-row.inactive{opacity:.75} .admin-tool{overflow:hidden}.preview-list{max-height:232px;overflow:hidden}.preview-clip{max-height:220px;overflow:hidden}.admin-subpage #histList{max-height:none;overflow:visible}.admin-subpage{padding-bottom:24px}.admin-subpage>.backAdmin{margin-bottom:16px}.inactive-details{margin-top:24px}.inactive-details summary{cursor:pointer;color:var(--muted);padding:12px 0}.account-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
 .account-row strong{display:block;font-weight:500}
 .account-row small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
 #view-access a{color:var(--brass)}
@@ -323,28 +323,40 @@ body.in .strings{display:none}
 
     <!-- STUDENT ACCESS -->
     <div id="view-access" class="view" hidden>
-      <section>
-        <div class="pagehead"><h2 class="pagetitle">Admin</h2><span id="accountCount" class="note"></span></div><section class="admin-tool"><h3>Add a student</h3><form id="addStudentForm" class="pwrow"><input id="newStudentName" class="field" maxlength="120" placeholder="Student full name" required><button id="addStudentButton" class="btn" type="submit">Add student</button></form><p id="addStudentNote" class="note" role="status"></p></section><h3>Student access</h3>
-        <p class="note">Create or reset logins for active students. Deactivating preserves their progress records. Their full name is their username. A new temporary password is shown only once, and the student must change it when they sign in.</p>
-        <p id="accountNote" class="note" role="status"></p>
-        <div id="credentialBox" class="done" hidden>
-          <h3>Temporary login</h3>
-          <p id="credentialUsername"></p>
-          <p><strong id="credentialPassword" class="mono"></strong></p>
-          <button id="copyCredential" class="btn" type="button">Copy temporary password</button>
-          <p class="note">Share this privately with the student. It cannot be viewed again; reset it if it is lost.</p>
-        </div>
+      <div id="adminHome">
+        <section class="admin-tool">
+          <div class="pagehead"><h2 class="pagetitle">Add a student</h2></div>
+          <form id="addStudentForm" class="pwrow"><input id="newStudentName" class="field" maxlength="120" placeholder="Student full name" required><button id="addStudentButton" class="btn" type="submit">Add student</button></form>
+          <p id="addStudentNote" class="note" role="status"></p>
+        </section>
+        <section class="admin-tool">
+          <div class="pagehead"><h2 class="pagetitle">Active Students</h2><span id="accountCount" class="note"></span></div>
+          <p id="accountNote" class="note" role="status"></p>
+          <div id="credentialBox" class="done" hidden><h3>Temporary login</h3><p id="credentialUsername"></p><p><strong id="credentialPassword" class="mono"></strong></p><button id="copyCredential" class="btn" type="button">Copy temporary password</button><p class="note">Share this privately with the student. It cannot be viewed again; reset it if lost.</p></div>
+          <div id="accountsPreviewList" class="list preview-list"></div>
+          <button id="showAllStudents" class="ghost more" type="button">Show all active students</button>
+        </section>
+        <section class="admin-tool">
+          <div class="pagehead"><h2 class="pagetitle">Log History</h2><span id="histCount" class="note"></span></div>
+          <div id="histPreviewMount" class="preview-clip"><div id="histList" class="hist"></div></div>
+          <button id="showAllHistory" class="ghost more" type="button">Show all Log History</button>
+        </section>
+      </div>
+      <section id="adminStudentsPage" class="admin-subpage" hidden>
+        <button class="ghost backAdmin" type="button">← Back to Admin</button>
+        <div class="pagehead"><h2 class="pagetitle">Active Students</h2></div>
         <div id="accountsList" class="list"></div>
+        <details class="inactive-details"><summary>Inactive Students</summary><div id="inactiveStudentsList" class="list"></div></details>
       </section>
-      <section class="admin-tool" aria-labelledby="historyHeading">
-        <div class="pagehead"><h3 id="historyHeading" class="pagetitle">Log History</h3><span id="histCount" class="note"></span></div>
+      <section id="adminHistoryPage" class="admin-subpage" hidden>
+        <button class="ghost backAdmin" type="button">← Back to Admin</button>
+        <div class="pagehead"><h2 class="pagetitle">Log History</h2><span id="historyFullCount" class="note"></span></div>
         <select id="histStudent" class="field" aria-label="Show logs for"><option value="">All students</option></select>
-        <div id="histList" class="hist"></div>
+        <div id="histFullMount"></div>
         <button id="histMore" class="ghost more" type="button" hidden>Load more</button>
         <p id="histNote" class="note" role="status"></p>
       </section>
-    </div>
-  </div>
+    </div>  </div>
 </main>
 
 <script>
@@ -753,12 +765,22 @@ const fmtDay = (d, opts = { weekday: "short", day: "numeric", month: "short", ye
 const codeOf = it => { const c = it.codes[0] || ""; return norm(c) === norm(it.label) ? "" : c; };
 const nameOf = id => (students.find(s => s.id === id) || {}).name || "Unknown student";
 
+function showAdminPage(page){
+  $("adminHome").hidden = page !== "home";
+  $("adminStudentsPage").hidden = page !== "students";
+  $("adminHistoryPage").hidden = page !== "history";
+  if (page === "history") {
+    $("histFullMount").appendChild($("histList"));
+    $("historyFullCount").textContent = $("histCount").textContent;
+  } else $("histPreviewMount").appendChild($("histList"));
+  window.scrollTo(0, 0);
+}
 function showView(){
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "log";
   for (const k of VIEWS) $("view-" + k).hidden = k !== v;
   document.querySelectorAll(".tabs a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
   if (v === "dashboard") { if (student && student.id) openProgress(student.id, student.name); else if (!dashOpen) loadDashboard(); }
-  if (v === "access") { loadStudentAccounts(); loadHistory(); }
+  if (v === "access") { showAdminPage("home"); loadStudentAccounts(); loadHistory(); }
   window.scrollTo(0, 0);
 }
 
@@ -944,7 +966,7 @@ async function loadHistory(more = false){
 }
 function drawHistory(){
   const box = $("histList"); box.innerHTML = "";
-  $("histCount").textContent = `${hist.total} log${hist.total === 1 ? "" : "s"}`;
+  $("histCount").textContent = `${hist.total} log${hist.total === 1 ? "" : "s"}`; $("historyFullCount").textContent = $("histCount").textContent;
   $("histMore").hidden = hist.rows.length >= hist.total;
   if (!hist.rows.length) { box.innerHTML = '<p class="note">No logs yet.</p>'; return; }
   let cur = null, list = null;
@@ -999,33 +1021,31 @@ async function studentAdminApi(action, data = {}){
   if (!res.ok) throw { code: body.error || "server_error", status: res.status };
   return body;
 }
+let adminStudents = [];
 async function loadStudentAccounts(){
-  const box = $("accountsList");
-  box.innerHTML = '<p class="note"><span class="pulse"></span>Loading student accounts…</p>';
+  for (const id of ["accountsPreviewList", "accountsList", "inactiveStudentsList"]) $(id).innerHTML = '<p class="note"><span class="pulse"></span>Loading students…</p>';
   $("accountNote").textContent = "";
   try {
-    const result = await studentAdminApi("admin_student_accounts");
-    drawStudentAccounts(result.students || []);
-  } catch (e) {
-    box.innerHTML = "";
-    $("accountNote").textContent = errText(e);
-  }
+    const result = await studentAdminApi("admin_student_accounts"); adminStudents = result.students || [];
+    const active = adminStudents.filter(s => s.active), inactive = adminStudents.filter(s => !s.active);
+    $("accountCount").textContent = `${active.length} active students`;
+    drawStudentAccounts(active.slice(0, 4), "accountsPreviewList"); drawStudentAccounts(active, "accountsList"); drawStudentAccounts(inactive, "inactiveStudentsList");
+    $("showAllStudents").hidden = false;
+  } catch (e) { for (const id of ["accountsPreviewList", "accountsList", "inactiveStudentsList"]) $(id).innerHTML = ""; $("accountNote").textContent = errText(e); }
 }
-function drawStudentAccounts(list){
-  const box = $("accountsList"); box.innerHTML = "";
-  $("accountCount").textContent = `${list.filter(s => s.active).length} active · ${list.filter(s => !s.active).length} inactive`;
+function drawStudentAccounts(list, boxId = "accountsList"){
+  const box = $(boxId); box.innerHTML = "";
   for (const student of list){
     const row = document.createElement("div"); row.className = "account-row" + (student.active ? "" : " inactive");
     const info = document.createElement("div"), name = document.createElement("strong"), status = document.createElement("small");
-    name.textContent = student.name;
-    status.textContent = `${student.active ? "Active" : "Inactive"} · ${student.has_login ? (student.must_change_password ? "Login set · temporary password needs changing" : "Login set") : "No login yet"}`;
+    name.textContent = student.name; status.textContent = `${student.active ? "Active" : "Inactive"} · ${student.has_login ? (student.must_change_password ? "Login set · temporary password needs changing" : "Login set") : "No login yet"}`;
     info.append(name, status);
     const actions = document.createElement("div"); actions.className = "account-actions";
     const login = document.createElement("button"); login.type = "button"; login.className = "ghost"; login.textContent = student.has_login ? "Reset password" : "Create login"; login.disabled = !student.active;
     login.addEventListener("click", async () => {
       if (student.has_login && !confirm(`Reset ${student.name}'s password?`)) return;
       login.disabled = true; $("accountNote").textContent = ""; $("credentialBox").hidden = true;
-      try { const c = await studentAdminApi("admin_reset_student_password", { student_id: student.id }); $("credentialUsername").textContent = `Username: ${c.username}`; $("credentialPassword").textContent = c.temporary_password; $("credentialBox").hidden = false; await loadStudentAccounts(); $("accountNote").textContent = "Login ready. Copy the temporary password and share it privately."; }
+      try { const c = await studentAdminApi("admin_reset_student_password", { student_id: student.id }); showAdminPage("home"); $("credentialUsername").textContent = `Username: ${c.username}`; $("credentialPassword").textContent = c.temporary_password; $("credentialBox").hidden = false; await loadStudentAccounts(); $("accountNote").textContent = "Login ready. Copy the temporary password and share it privately."; }
       catch (e) { $("accountNote").textContent = errText(e); login.disabled = false; }
     });
     const toggle = document.createElement("button"); toggle.type = "button"; toggle.className = "ghost"; toggle.textContent = student.active ? "Deactivate" : "Reactivate";
@@ -1068,6 +1088,13 @@ async function enter(pw){
   $("enter").disabled = false; $("enter").textContent = "Enter";
 }
 
+$("showAllStudents").addEventListener("click", () => showAdminPage("students"));
+$("showAllHistory").addEventListener("click", () => showAdminPage("history"));
+document.querySelectorAll(".backAdmin").forEach(button => button.addEventListener("click", () => showAdminPage("home")));
+document.querySelector('.tabs a[data-view="access"]').addEventListener("click", event => {
+  if (location.hash.slice(1) === "access" && (!$("adminHome").hidden)) return;
+  if (location.hash.slice(1) === "access") { event.preventDefault(); showAdminPage("home"); }
+});
 $("addStudentForm").addEventListener("submit", async ev => {
   ev.preventDefault(); const input = $("newStudentName"), button = $("addStudentButton"); button.disabled = true; button.textContent = "Adding…"; $("addStudentNote").textContent = "";
   try { const r = await studentAdminApi("admin_create_student", { name: input.value.trim() }); input.value = ""; await loadStudentAccounts(); $("addStudentNote").textContent = `${r.name} added. Use Create login to set up student access.`; }
