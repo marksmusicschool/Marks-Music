@@ -770,10 +770,9 @@ function showAdminPage(page){
   $("adminHome").hidden = page !== "home";
   $("adminStudentsPage").hidden = page !== "students";
   $("adminHistoryPage").hidden = page !== "history";
-  if (page === "history") {
-    $("histFullMount").appendChild($("histList"));
-    $("historyFullCount").textContent = $("histCount").textContent;
-  } else $("histPreviewMount").appendChild($("histList"));
+  if (page === "history") $("histFullMount").appendChild($("histList"));
+  else $("histPreviewMount").appendChild($("histList"));
+  drawHistory();
   window.scrollTo(0, 0);
 }
 function showView(){
