@@ -478,6 +478,7 @@ async function pickStudent(s, typedName){
   bests = new Map();
   $("whoProgress").hidden = !student.id;
   loadDayLogs();
+  if (student.id) preloadProgress(student.id).catch(() => {});
   if (!student.id) { $("whoMeta").innerHTML = 'First class on record<span class="newtag">New student</span>'; refreshRows(); updateSave(); return; }
   $("whoMeta").textContent = "Loading their best scores…";
   try {
@@ -578,6 +579,7 @@ async function save(){
   $("save").disabled = true; setStatus("Saving…");
   try {
     const r = await api("log", { student_id: student.id ? Number(student.id) : null, student_name: student.name, date, entries });
+    preloadProgress(r.student_id, true).catch(() => {});
     saveNote = [r.created_student && "Added as a new student", r.inserted && `${r.inserted} saved`, r.updated && `${r.updated} raised to a higher score`, r.kept && `${r.kept} already had a higher score that day`].filter(Boolean).join(" · ");
     savedMarks = new Map(entries.map(e => { const b = bests.get(e.item_id); return [e.item_id, !b ? "first" : e.score > b.best ? "new best" : ""]; }));
     if (r.created_student) { students.push({ id: r.student_id, name: student.name }); fillHistStudents(); }
@@ -696,6 +698,24 @@ function drawCalRows(){
 /* ---------- pages ---------- */
 const VIEWS = ["log", "dashboard", "history"];
 let dashStudents = null, dashOpen = null;      // cached Dashboard list, open student id
+const progressCache = new Map(), progressRequests = new Map(), progressVersions = new Map();
+function preloadProgress(id, force = false){
+  if (!id) return Promise.resolve([]);
+  const key = String(id);
+  if (!force && progressCache.has(key)) return Promise.resolve(progressCache.get(key));
+  if (!force && progressRequests.has(key)) return progressRequests.get(key);
+  const version = (progressVersions.get(key) || 0) + (force ? 1 : 0);
+  if (force) progressVersions.set(key, version);
+  const request = api("student_history", { student_id: Number(id) }).then(r => {
+    const logs = r.logs || [];
+    if ((progressVersions.get(key) || 0) === version) progressCache.set(key, logs);
+    return logs;
+  }).finally(() => {
+    if (progressRequests.get(key) === request) progressRequests.delete(key);
+  });
+  progressRequests.set(key, request);
+  return request;
+}
 let hist = { sid: "", rows: [], total: 0 };
 const fmtDay = (d, opts = { weekday: "short", day: "numeric", month: "short", year: "numeric" }) => new Date(d + "T00:00:00").toLocaleDateString(undefined, opts);
 const codeOf = it => { const c = it.codes[0] || ""; return norm(c) === norm(it.label) ? "" : c; };
@@ -779,11 +799,12 @@ function drawStudentList(){
 async function openStudent(st){
   dashOpen = st.id;
   $("dashList").hidden = true; $("dashDetail").hidden = false; window.scrollTo(0, 0);
-  $("dName").textContent = st.name;
-  $("dMeta").textContent = st.first_class ? `Logging since ${fmtDay(st.first_class, { month: "short", year: "numeric" })}` : "No classes logged yet";
-  $("dStats").innerHTML = ""; $("dBody").innerHTML = '<p class="note"><span class="pulse"></span>Loading progress…</p>';
+  $("dName").textContent = st.name; $("dMeta").textContent = st.first_class ? `Logging since ${fmtDay(st.first_class, { month: "short", year: "numeric" })}` : "No classes logged yet"; $("dStats").innerHTML = "";
+  const cached = progressCache.get(String(st.id));
+  if (cached) { drawProgress(st, cached); return; }
+  $("dBody").innerHTML = '<p class="note"><span class="pulse"></span>Loading progress…</p>';
   try {
-    const logs = (await api("student_history", { student_id: st.id })).logs || [];
+    const logs = await preloadProgress(st.id);
     if (dashOpen !== st.id) return;
     drawProgress(st, logs);
   } catch (e) { if (dashOpen === st.id) $("dBody").innerHTML = `<p class="note">${errText(e)}</p>`; }
@@ -819,33 +840,41 @@ function drawProgress(st, logs){
   const pos = it => { const i = items.indexOf(it); return i < 0 ? 1e9 : i; };
   for (const r of rowsOut.sort((a, b) => pos(a.it) - pos(b.it))) {
     const category = tidy(r.it.cat || "other");
+    const type = tidy(r.it.sub || "General");
     if (!categories.has(category)) categories.set(category, new Map());
-    const groups = categories.get(category);
+    const types = categories.get(category);
+    if (!types.has(type)) types.set(type, new Map());
+    const rhythms = types.get(type);
     const rhythm = rhythmFor(r.it);
     const key = rhythm ? "rhythm:" + rhythm : "other";
-    if (!groups.has(key)) groups.set(key, { label: rhythm ? tidy(rhythm) : "", rows: [] });
-    groups.get(key).rows.push(r);
+    if (!rhythms.has(key)) rhythms.set(key, { label: rhythm ? tidy(rhythm) : "", rows: [] });
+    rhythms.get(key).rows.push(r);
   }
-  for (const [category, groups] of categories) {
+  for (const [category, types] of categories) {
     const sec = document.createElement("div"); sec.className = "grp";
-    sec.innerHTML = '<div class="label"></div>'; sec.firstChild.textContent = category;
-    for (const group of groups.values()) {
-      if (group.label) {
-        const heading = document.createElement("div"); heading.className = "label rhythm-label";
-        heading.textContent = group.label; sec.appendChild(heading);
-      }
-      for (const r of group.rows) {
-        const el = document.createElement("div"); el.className = "prog";
-        const gain = r.best - r.first;
-        el.innerHTML = `<div class="nm"><b></b><small><span class="code"></span><span class="when"></span></small></div>${spark(r.pts)}<div class="sc"><b></b><small></small></div>`;
-        el.querySelector("b").textContent = r.it.label;
-        el.querySelector(".code").textContent = codeOf(r.it);
-        el.querySelector(".when").textContent = `${r.pts.length}× · last ${fmtDay(r.last.date, { day: "numeric", month: "short" })} at ${r.last.score}`;
-        el.querySelector(".sc b").textContent = r.best;
-        const sm = el.querySelector(".sc small");
-        sm.textContent = gain > 0 ? `+${gain} BPM` : "best BPM"; if (gain > 0) sm.className = "up";
-        el.title = r.pts.map(p => `${fmtDay(p.date, { day: "numeric", month: "short" })}: ${p.score}`).join("\n");
-        sec.appendChild(el);
+    const categoryHeading = document.createElement("div"); categoryHeading.className = "label";
+    categoryHeading.textContent = category; sec.appendChild(categoryHeading);
+    for (const [type, groups] of types) {
+      const typeHeading = document.createElement("div"); typeHeading.className = "label type-label";
+      typeHeading.textContent = type; sec.appendChild(typeHeading);
+      for (const group of groups.values()) {
+        if (group.label) {
+          const heading = document.createElement("div"); heading.className = "label rhythm-label";
+          heading.textContent = group.label; sec.appendChild(heading);
+        }
+        for (const r of group.rows) {
+          const el = document.createElement("div"); el.className = "prog";
+          const gain = r.best - r.first;
+          el.innerHTML = `<div class="nm"><b></b><small><span class="code"></span><span class="when"></span></small></div>${spark(r.pts)}<div class="sc"><b></b><small></small></div>`;
+          el.querySelector("b").textContent = r.it.label;
+          el.querySelector(".code").textContent = codeOf(r.it);
+          el.querySelector(".when").textContent = `${r.pts.length}× · last ${fmtDay(r.last.date, { day: "numeric", month: "short" })} at ${r.last.score}`;
+          el.querySelector(".sc b").textContent = r.best;
+          const sm = el.querySelector(".sc small");
+          sm.textContent = gain > 0 ? `+${gain} BPM` : "best BPM"; if (gain > 0) sm.className = "up";
+          el.title = r.pts.map(p => `${fmtDay(p.date, { day: "numeric", month: "short" })}: ${p.score}`).join("\n");
+          sec.appendChild(el);
+        }
       }
     }
     body.appendChild(sec);
