@@ -142,3 +142,11 @@ These notes are the working map for future changes. Update this file in the same
 - Log History preview is height-limited; the full page retains filtering and pagination.
 - Deployed on `gh-pages`: `f38dd19646a185e7dc1329240b82bd20fb413ced`.
 - Verification: confirmed preview and full-list containers, dedicated page navigation, Admin return handler, inactive reactivation list, and history controls are present.
+
+
+## Scrollable Admin previews — 2026-10-23
+
+- Made the Active Students overview and Log History overview internally scrollable. The student preview still shows a compact four-row-height window, and scrolling reveals the entire loaded active roster.
+- The history preview now fetches additional 200-row pages in the background until it reaches entries at least seven days old or exhausts available history. The history API was checked to return newest-first rows; the preview itself scrolls within a 220px viewport.
+- Deployed admin page on gh-pages: 64e1b12cc7ed1eb928220716ff50d8f54e5aebca (index.html).
+- Verification: fetched the deployed page and confirmed both internal scroll containers and the seven-day pagination condition. No database changes were needed.
